@@ -1,9 +1,11 @@
-//  Temp data (no database)
+const API_URL = "http://localhost:3000"
+
+//  Temp data (no database yet)
 
 const users = [
-  { username: 'ranger1', password: 'pass', role: 'ranger', name: 'Sarah Ranger' },
-  { username: 'student1', password: 'pass', role: 'student', name: 'Tom Junior' },
-  { username: 'admin1', password: 'pass', role: 'admin', name: 'Admin User' },
+  { email: 'ranger1', password: 'pass', role: 'ranger', name: 'Sarah Ranger' },
+  { email: 'student1', password: 'pass', role: 'student', name: 'Tom Junior' },
+  { email: 'admin1', password: 'pass', role: 'admin', name: 'Admin User' },
 ];
 
 let cohorts = [
@@ -45,18 +47,34 @@ let resources = [
 let currentUser = null;
 
 // ── Auth 
-function doLogin() {
-  const u = document.getElementById('login-username').value.trim();
+
+async function doLogin() {
+  const u = document.getElementById('login-email').value.trim();
   const p = document.getElementById('login-password').value.trim();
-  const match = users.find(x => x.username === u && x.password === p);
-  if (!match) {
+  let response = await fetch(`${API_URL}/user/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      email: u,
+      password: p
+    })
+  })
+  if (!response.ok) {
     document.getElementById('login-error').style.display = 'block';
     return;
   }
-  currentUser = match;
+  let jsonresponse = await response.json()
+  currentUser = {
+    name: jsonresponse.name,
+    email: u,
+    role: jsonresponse.role
+  }
+  localStorage.setItem("token", jsonresponse.token)
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  document.getElementById('header-user').textContent = match.name + ' (' + match.role + ')';
+  document.getElementById('header-user').textContent = currentUser.name;
   buildNav();
   show('home');
 }
@@ -65,7 +83,7 @@ function doLogout() {
   currentUser = null;
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'block';
-  document.getElementById('login-username').value = '';
+  document.getElementById('login-email').value = '';
   document.getElementById('login-password').value = '';
   document.getElementById('login-error').style.display = 'none';
 }
@@ -110,7 +128,7 @@ function show(page) {
 //  Home 
 function renderHome() {
   const myCohorts = currentUser.role === 'student'
-    ? cohorts.filter(c => c.members.includes(currentUser.username))
+    ? cohorts.filter(c => c.members.includes(currentUser.email))
     : cohorts;
 
   document.getElementById('page').innerHTML = `
@@ -233,7 +251,7 @@ function renderFeed() {
       <div class="card">
         <p>[Image Placeholder]</p>
         <p><strong>${p.author}</strong> - ${p.caption}</p>
-        <button onclick="toggleLike(${p.id})">${p.likedBy.includes(currentUser.username) ? 'Unlike' : 'Like'}</button>
+        <button onclick="toggleLike(${p.id})">${p.likedBy.includes(currentUser.email) ? 'Unlike' : 'Like'}</button>
         <span> ${p.likes} like(s)</span>
       </div>
     `).join('') || '<p>No posts yet.</p>';
@@ -244,12 +262,12 @@ function renderFeed() {
 function toggleLike(postId) {
   const post = photoPosts.find(p => p.id === postId);
   if (!post) return;
-  if (post.likedBy.includes(currentUser.username)) {
+  if (post.likedBy.includes(currentUser.email)) {
     post.likes--;
-    post.likedBy = post.likedBy.filter(u => u !== currentUser.username);
+    post.likedBy = post.likedBy.filter(u => u !== currentUser.email);
   } else {
     post.likes++;
-    post.likedBy.push(currentUser.username);
+    post.likedBy.push(currentUser.email);
   }
   renderFeed();
 }
@@ -267,7 +285,7 @@ function renderMessages() {
 
   cohorts.forEach(cohort => {
     // Students only see their own cohorts
-    if (currentUser.role === 'student' && !cohort.members.includes(currentUser.username)) return;
+    if (currentUser.role === 'student' && !cohort.members.includes(currentUser.email)) return;
 
     const msgs = messages[cohort.id] || [];
     html += `
@@ -335,7 +353,7 @@ function addResource() {
 
 //  Cohorts 
 function renderCohorts() {
-  if (currentUser.role === 'student') {
+  if (currentUser.role !== 'admin') {
     document.getElementById('page').innerHTML = '<p>Access denied.</p>';
     return;
   }
@@ -354,6 +372,7 @@ function renderCohorts() {
         <h3>${c.name}</h3>
         <p>Ranger: ${c.rangerName}</p>
         <p>Members: ${c.members.length === 0 ? 'None' : c.members.join(', ')}</p>
+        <button onclick="renderCohortManagement()">Manage Cohort</button>
       </div>
     `).join('');
 
@@ -369,6 +388,87 @@ function addCohort() {
   renderCohorts();
 }
 
+async function renderCohortManagement() {
+  if (currentUser.role !== 'admin') {
+    document.getElementById('page').innerHTML = '<p>Access denied.</p>';
+    return;
+  }
+
+  let html = `
+      <h2>Cohort Management</h2>
+      <div class="card">
+        <h3>Add Ranger</h3>
+        <label>Name</label>
+        <input type="text" id="register-name" />
+        <label>Email</label>
+        <input type="text" id="register-email" />
+        <label>Password</label>
+        <input type="password" id="register-password" />
+        <button onclick="doRegister()">Create</button>
+        <p id="register-error">Email already exists</p>
+      </div>
+    `;
+
+  const token = localStorage.getItem("token")
+  if (token == null) {
+    throw new Error()
+  }
+
+  let response = await fetch(`${API_URL}/user/`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    }
+  })
+  let responsejson = await response.json()
+
+  html += responsejson.map(ranger => `
+      <div class="card">
+        <h3>${ranger.name}</h3>
+        <p>Email: ${ranger.email}</p>
+        <p>Status: ${ranger.status}</p>
+        <p>Created: ${ranger.created}</p>
+        <button>Edit Details</button> <button>Delete Account</button>
+      </div>
+    `).join('');
+
+  html += `<button onclick="renderCohorts()">Back</button>`
+
+  document.getElementById('page').innerHTML = html;
+}
+
+async function doRegister() {
+  const n = document.getElementById('register-name').value.trim();
+  const u = document.getElementById('register-email').value.trim();
+  const p = document.getElementById('register-password').value.trim();
+  const token = localStorage.getItem("token")
+
+  if (token == null) {
+    throw new Error()
+  }
+
+  let response = await fetch(`${API_URL}/user/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      name: n,
+      email: u,
+      password: p
+    })
+  })
+  if (!response.ok) {
+    document.getElementById('register-error').style.display = 'block';
+    return;
+  }
+  else {
+    renderCohortManagement()
+  }
+}
+
 // Settings 
 function renderSettings() {
   document.getElementById('page').innerHTML = `
@@ -377,7 +477,7 @@ function renderSettings() {
         <h3>Account</h3>
         <p>Name: ${currentUser.name}</p>
         <p>Role: ${currentUser.role}</p>
-        <p>Username: ${currentUser.username}</p>
+        <p>Email: ${currentUser.email}</p>
       </div>
       <div class="card">
         <h3>Preferences</h3>
@@ -407,11 +507,11 @@ function renderAdmin() {
       <div class="card">
         <h3>Users</h3>
         <table>
-          <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Action</th></tr></thead>
+          <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Action</th></tr></thead>
           <tbody>
             ${users.map(u => `
               <tr>
-                <td>${u.username}</td>
+                <td>${u.email}</td>
                 <td>${u.name}</td>
                 <td>${u.role}</td>
                 <td><button onclick="alert('Edit not implemented in prototype.')">Edit</button></td>
