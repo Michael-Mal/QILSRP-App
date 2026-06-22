@@ -8,11 +8,6 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^8.0.12",
-    "webpack-cli": "^7.0.3"
-  },
-  "dependencies": {
-    "@aws-sdk/rds-signer": "^3.1070.0",
-    "mysql2": "^3.22.5"
+    "vite": "^8.0.12"
   }
 }
