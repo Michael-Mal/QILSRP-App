@@ -149,21 +149,21 @@ router.put('/:email', auth, verifyUserData, (req, res, next) => {
         throw Error("User not found")
       }
 
-      if (req.email != req.params.email) {
+      if (req.email != req.params.email && req.role != "admin") {
         throw Error("Forbidden")
       }
 
       return argon2.hash(password)
-      
+
     })
     .then((password_hash) => {
       return req.db('user')
-        .where('email', req.email)
+        .where('email', req.params.email)
         .update({ name, email, password_hash })
-      
+
     })
     .then(() => {
-      res.json()
+      res.json({ message: `User ${name} has been updated` })
 
     })
     .catch((e) => {
@@ -180,6 +180,34 @@ router.put('/:email', auth, verifyUserData, (req, res, next) => {
     })
 })
 
-// TODO: Add delete functionality
+router.delete('/:email', auth, (req, res, next) => {
+  if (req.email != req.params.email && req.role != "admin") {
+    res.status(403).json({ error: true, message: "Forbidden" })
+    return
+  }
+
+  req.db('user')
+    .where('email', req.params.email)
+    .del()
+    .then(count => {
+      // Check if such a user exists
+      if (count != 1) {
+        throw Error("User not found")
+      }
+
+      res.json({ message: `User with email ${req.params.email} has been deleted` })
+
+    })
+    .catch(e => {
+      if (e.message == "User not found") {
+        res.status(404).json({ error: true, message: e.message })
+      }
+      else {
+        console.log(e.message)
+        res.status(500).json({ error: true })
+      }
+
+    })
+})
 
 export default router

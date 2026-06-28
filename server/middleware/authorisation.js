@@ -11,7 +11,9 @@ const auth = (req, res, next) => {
   }
   const token = req.headers.authorization.replace(/^Bearer /, "")
   try {
-    req.email = jwt.verify(token, process.env.JWT_SECRET).email
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET)
+    req.email = decodedToken.email;
+    req.role = decodedToken.role;
   } catch (e) {
     if (e.name === 'TokenExpiredError') {
       res.status(401).json({ error: true, message: 'JWT token has expired' })
