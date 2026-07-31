@@ -2,173 +2,11 @@
 <html lang="en">
 
 <head>
-  <script src="./code/script.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Junior Ranger App</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #fff;
-      color: #000;
-    }
-
-    #app {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    header {
-      border-bottom: 1px solid #000;
-      padding: 10px;
-    }
-
-    header h1 {
-      font-size: 1rem;
-      margin: 0;
-      display: inline;
-    }
-
-    header span {
-      float: right;
-      font-size: 0.85rem;
-    }
-
-    nav {
-      border-bottom: 1px solid #ccc;
-      padding: 6px;
-    }
-
-    nav button {
-      margin-right: 4px;
-      padding: 4px 8px;
-      cursor: pointer;
-    }
-
-    nav button.active {
-      font-weight: bold;
-      text-decoration: underline;
-    }
-
-    #page {
-      padding: 12px;
-    }
-
-    h2 {
-      font-size: 1rem;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 4px;
-      margin-bottom: 10px;
-    }
-
-    h3 {
-      font-size: 0.95rem;
-      margin: 0 0 6px 0;
-    }
-
-    .card {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-
-    label {
-      display: block;
-      font-size: 0.85rem;
-      margin-bottom: 2px;
-    }
-
-    input[type=text],
-    input[type=password],
-    input[type=date],
-    select,
-    textarea {
-      width: 100%;
-      padding: 5px;
-      margin-bottom: 8px;
-      font-size: 0.85rem;
-      box-sizing: border-box;
-    }
-
-    button {
-      padding: 5px 10px;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-      margin-top: 8px;
-    }
-
-    th,
-    td {
-      border: 1px solid #ccc;
-      padding: 6px;
-      text-align: left;
-    }
-
-    th {
-      background: #eee;
-    }
-
-    .msg-list {
-      border: 1px solid #ccc;
-      padding: 8px;
-      min-height: 60px;
-      font-size: 0.85rem;
-      margin-bottom: 6px;
-    }
-
-    .msg {
-      margin-bottom: 4px;
-    }
-
-    .msg-input-row {
-      display: flex;
-      gap: 6px;
-    }
-
-    .msg-input-row input {
-      flex: 1;
-    }
-
-    #login-screen {
-      max-width: 300px;
-      margin: 60px auto;
-      padding: 20px;
-      border: 1px solid #ccc;
-    }
-
-    #login-screen h1 {
-      font-size: 1rem;
-      margin-bottom: 12px;
-    }
-
-    #login-error {
-      color: red;
-      font-size: 0.8rem;
-      display: none;
-    }
-
-    #register-error {
-      color: red;
-      font-size: 0.8rem;
-      display: none;
-    }
-
-    p {
-      font-size: 0.9rem;
-    }
-
-    small {
-      color: #555;
-    }
-  </style>
+  <link rel="stylesheet" href="./code/style.css" />
+  <script type="module" src="./code/script.js"></script>
 </head>
 
 <body>
@@ -177,12 +15,11 @@
   <div id="login-screen">
     <h1>Junior Ranger App</h1>
     <label>Email</label>
-    <input type="text" id="login-email" placeholder="ranger1@email.com" />
+    <input type="text" id="login-email" placeholder="you@email.com" />
     <label>Password</label>
-    <input type="password" id="login-password" placeholder="pass" />
-    <button onclick="doLogin();">Login</button>
+    <input type="password" id="login-password" placeholder="Password" />
+    <button id="login-submit">Login</button>
     <p id="login-error">Invalid email or password.</p>
-    <p><small>Demo: ranger1@email.com/pass &nbsp; admin1@email.com/pass</small></p>
   </div>
 
   <!-- MAIN APP -->
