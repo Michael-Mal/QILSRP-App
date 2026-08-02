@@ -26,6 +26,8 @@ export default class AdminView {
         <label>Name</label><input type="text" id="admin-reg-name" />
         <label>Email</label><input type="text" id="admin-reg-email" />
         <label>Password</label><input type="password" id="admin-reg-password" />
+        <label>Cohort</label><input type="text" id="admin-reg-cohort" />
+        <label>Role</label><input type="text" id="admin-reg-role" />
         <button data-action="register-user">Create</button>
         <p id="admin-reg-error" class="error-text"></p>
       </div>
@@ -83,13 +85,15 @@ export default class AdminView {
     const name = this.container.querySelector('#admin-reg-name').value.trim();
     const email = this.container.querySelector('#admin-reg-email').value.trim();
     const password = this.container.querySelector('#admin-reg-password').value.trim();
+    const cohort = this.container.querySelector('#admin-reg-cohort').value.trim();
+    const role = this.container.querySelector('#admin-reg-role').value.trim();
     const errorEl = this.container.querySelector('#admin-reg-error');
     errorEl.style.display = 'none';
 
-    if (!name || !email || !password) { alert('Name, email, and password are required.'); return; }
+    if (!name || !email || !password || !cohort || !role ) { alert('Name, email, password, cohort, and role are required.'); return; }
 
     try {
-      await this.app.auth.register({ name, email, password });
+      await this.app.auth.register({ name, email, password, cohort, role });
       await this.mount();
     } catch (error) {
       errorEl.textContent = error.message || 'Registration failed.';

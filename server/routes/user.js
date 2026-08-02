@@ -15,7 +15,7 @@ const router = express.Router()
  * The endpoint at which a new user can be registered
  */
 router.post('/register', auth, verifyUserData, (req, res, next) => {
-  const { name, email, password } = req.body
+  const { name, email, password, cohort, role } = req.body
 
   // Determine if user already exists in table
   req.db.from("user").select("*").where("email", "=", email)
@@ -39,8 +39,8 @@ router.post('/register', auth, verifyUserData, (req, res, next) => {
         password_hash,
         status: 'Active',
         created: currentDate.toISOString().slice(0, 19).replace('T', ' '),
-        role: 'Ranger',
-        cohort: 'Cohort A - Brisbane North'
+        role,
+        cohort
       })
 
     })
@@ -138,7 +138,7 @@ router.get('/', auth, (req, res, next) => {
  * (not implemented on the client-side yet)
  */
 router.put('/:email', auth, verifyUserData, (req, res, next) => {
-  const { name, email, password } = req.body
+  const { name, email, password, cohort, role } = req.body
 
   // Check if such a user exists
   req.db('user')
@@ -159,7 +159,7 @@ router.put('/:email', auth, verifyUserData, (req, res, next) => {
     .then((password_hash) => {
       return req.db('user')
         .where('email', req.params.email)
-        .update({ name, email, password_hash })
+        .update({ name, email, password_hash, cohort, role })
 
     })
     .then(() => {

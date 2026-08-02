@@ -25,8 +25,8 @@ export default class AuthController {
     return user;
   }
 
-  async register({ name, email, password }) {
-    return this.api.post('/user/register', { name, email, password }, { auth: true });
+  async register({ name, email, password, cohort, role }) {
+    return this.api.post('/user/register', { name, email, password, cohort, role }, { auth: true });
   }
 
   logout() {

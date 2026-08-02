@@ -27,7 +27,7 @@
         ],
         "description": "Creates a new user account. A request body containing the user to be registered must be sent.",
         "requestBody": {
-          "description": "An object containing the name, email, and password of the user to be registered.",
+          "description": "An object containing the name, email, password, cohort, and role of the user to be registered.",
           "required": true,
           "content": {
             "application/json": {
@@ -50,6 +50,18 @@
                     "type": "string",
                     "examples": [
                       "password"
+                    ]
+                  },
+                  "cohort": {
+                    "type": "string",
+                    "examples": [
+                      "Brisbane Cohort"
+                    ]
+                  },
+                  "role": {
+                    "type": "string",
+                    "examples": [
+                      "ranger"
                     ]
                   }
                 }
@@ -77,25 +89,46 @@
             }
           },
           "400": {
-            "description": "Bad request",
+            "description": "Bad request. Click on 'Schema' to see the possible error responses.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "boolean",
-                      "examples": [
-                        true
-                      ]
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Request body incomplete, both email and password are required"
+                          ]
+                        }
+                      }
                     },
-                    "message": {
-                      "type": "string",
-                      "examples": [
-                        "Request body incomplete, both email and password are required"
-                      ]
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Role must be one of 'student', 'ranger', or 'admin'"
+                          ]
+                        }
+                      }
                     }
-                  }
+                  ]
                 }
               }
             }
@@ -403,6 +436,18 @@
                     "examples": [
                       "password"
                     ]
+                  },
+                  "cohort": {
+                    "type": "string",
+                    "examples": [
+                      "Brisbane Cohort"
+                    ]
+                  },
+                  "role": {
+                    "type": "string",
+                    "examples": [
+                      "ranger"
+                    ]
                   }
                 }
               }
@@ -573,7 +618,24 @@
                         "message": {
                           "type": "string",
                           "examples": [
-                            "Request body incomplete: name, email, and password are required."
+                            "Request body incomplete, both email and password are required"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Role must be one of 'student', 'ranger', or 'admin'"
                           ]
                         }
                       }
