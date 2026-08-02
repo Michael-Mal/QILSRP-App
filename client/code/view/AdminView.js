@@ -121,8 +121,12 @@ export default class AdminView {
     if (!name) return;
     const password = prompt('New password for this user:');
     if (!password) return;
+    const cohort = prompt('Updated cohort for this user:');
+    if (!cohort) return;
+    const role = prompt('Updated role for this user:');
+    if (!role) return;
 
-    await this.app.users.update(email, { name, password });
+    await this.app.users.update(email, { name, password, cohort, role });
     await this.mount();
   }
 
