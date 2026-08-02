@@ -6,6 +6,9 @@ export default class AdminView {
     this.app = app;
   }
 
+  cohortFilter = null
+  roleFilter = null
+
   async mount() {
     const user = this.app.auth.currentUser;
     if (!user.isAdmin) {
@@ -14,7 +17,7 @@ export default class AdminView {
     }
 
     const [users, cohorts] = await Promise.all([
-      this.app.users.list(),
+      this.app.users.list(this.cohortFilter, this.roleFilter),
       this.app.cohorts.list(),
     ]);
 
@@ -34,6 +37,9 @@ export default class AdminView {
 
       <div class="card">
         <h3>Users</h3>
+        <label>Cohort</label><input type="text" id="admin-fil-cohort" />
+        <label>Role</label><input type="text" id="admin-fil-role" />
+        <button data-action="filter">Filter</button>
         <table>
           <thead><tr><th>Email</th><th>Name</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
           <tbody>
@@ -72,6 +78,9 @@ export default class AdminView {
     const registerBtn = this.container.querySelector('[data-action="register-user"]');
     if (registerBtn) registerBtn.addEventListener('click', () => this.registerUser());
 
+    const filterBtn = this.container.querySelector('[data-action="filter"]');
+    if (filterBtn) filterBtn.addEventListener('click', () => this.filterUsers());
+
     this.container.querySelectorAll('[data-action="edit-user"]').forEach(button => {
       button.addEventListener('click', () => this.editUser(button.dataset.email));
     });
@@ -99,6 +108,12 @@ export default class AdminView {
       errorEl.textContent = error.message || 'Registration failed.';
       errorEl.style.display = 'block';
     }
+  }
+
+  async filterUsers() {
+    this.cohortFilter = this.container.querySelector('#admin-fil-cohort').value.trim();
+    this.roleFilter = this.container.querySelector('#admin-fil-role').value.trim();
+    await this.mount();
   }
 
   async editUser(email) {

@@ -8,8 +8,20 @@ export default class UserController {
     this.api = apiClient;
   }
 
-  async list() {
-    const rows = await this.api.get('/user/', { auth: true });
+  async list(cohort, role) {
+    let searchParams = ''
+
+    if (cohort) {
+      searchParams += `?cohort=${cohort}`
+      if (role) {
+        searchParams += `&role=${role}`
+      }
+    }
+    else if (role) {
+      searchParams += `?role=${role}`
+    }
+
+    const rows = await this.api.get('/user/' + searchParams, { auth: true });
     return rows.map(row => new User(row));
   }
 
