@@ -20,6 +20,11 @@
         "tags": [
           "Authentication"
         ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "description": "Creates a new user account. A request body containing the user to be registered must be sent.",
         "requestBody": {
           "description": "An object containing the name, email, and password of the user to be registered.",
