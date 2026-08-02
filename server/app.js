@@ -3,6 +3,7 @@ import cors from 'cors'
 import knex from 'knex'
 import knexConfig from './knexfile.js'
 
+import authenticationRouter from './routes/authentication.js'
 import userRouter from './routes/user.js'
 import cohortRouter from './routes/cohort.js'
 
@@ -33,7 +34,7 @@ app.use(morgan('dev'))
 app.use('/', swaggerUI.serve)
 app.get('/', swaggerUI.setup(swaggerDocument))
 
-app.use('/user', userRouter)
+app.use('/user', authenticationRouter, userRouter)
 app.use('/cohort', cohortRouter)
 
 app.listen(port, () => {

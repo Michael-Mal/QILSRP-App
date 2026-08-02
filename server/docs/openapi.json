@@ -15,10 +15,123 @@
     }
   },
   "paths": {
+    "/user/login": {
+      "post": {
+        "description": "Log in to an existing user account. A request body containing the user credentials must be sent.",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "description": "The credentials of the user to log in.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "examples": [
+                      "admin1@email.com"
+                    ]
+                  },
+                  "password": {
+                    "type": "string",
+                    "examples": [
+                      "pass"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Log in successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "examples": [
+                        "ajsonwebtoken"
+                      ]
+                    },
+                    "tokenType": {
+                      "type": "string",
+                      "examples": [
+                        "Bearer"
+                      ]
+                    },
+                    "expiresIn": {
+                      "type": "number",
+                      "examples": [
+                        86400
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid log in request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Request body incomplete, both email and password are required"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Log in failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Incorrect email or password"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/user/register": {
       "post": {
         "tags": [
-          "Authentication"
+          "User"
         ],
         "security": [
           {
@@ -150,119 +263,6 @@
                       "type": "string",
                       "examples": [
                         "User already exists"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/user/login": {
-      "post": {
-        "description": "Log in to an existing user account. A request body containing the user credentials must be sent.",
-        "tags": [
-          "Authentication"
-        ],
-        "requestBody": {
-          "description": "The credentials of the user to log in.",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "type": "string",
-                    "examples": [
-                      "admin1@email.com"
-                    ]
-                  },
-                  "password": {
-                    "type": "string",
-                    "examples": [
-                      "pass"
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Log in successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "token": {
-                      "type": "string",
-                      "examples": [
-                        "ajsonwebtoken"
-                      ]
-                    },
-                    "tokenType": {
-                      "type": "string",
-                      "examples": [
-                        "Bearer"
-                      ]
-                    },
-                    "expiresIn": {
-                      "type": "number",
-                      "examples": [
-                        86400
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid log in request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "boolean",
-                      "examples": [
-                        true
-                      ]
-                    },
-                    "message": {
-                      "type": "string",
-                      "examples": [
-                        "Request body incomplete, both email and password are required"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Log in failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "boolean",
-                      "examples": [
-                        true
-                      ]
-                    },
-                    "message": {
-                      "type": "string",
-                      "examples": [
-                        "Incorrect email or password"
                       ]
                     }
                   }
