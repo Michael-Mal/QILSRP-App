@@ -284,6 +284,31 @@
             "bearerAuth": []
           }
         ],
+        "parameters": [
+          {
+            "name": "cohort",
+            "in": "query",
+            "description": "If this parameter is present, only users in the specified cohort will be returned.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "description": "If this parameter is present, only users in the specified role will be returned.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "student",
+                "ranger",
+                "admin"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "An array of objects containing name, email, status, and date created",

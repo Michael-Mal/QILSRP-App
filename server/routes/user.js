@@ -61,7 +61,19 @@ router.get('/', auth, (req, res, next) => {
 
   req.db('user')
     .select(fields)
-    //.where('cohort', req.params.cohort)
+
+    // Filters
+    .where(function () {
+      if (req.query.cohort != undefined) {
+        this.where('cohort', req.query.cohort)
+      }
+    })
+    .andWhere(function () {
+      if (req.query.role != undefined) {
+        this.where('role', req.query.role)
+      }
+    })
+
     .then(cohort_members => {
       cohort_members.forEach(member => {
         // Convert created time to local timezone by adding 10 hours
@@ -125,6 +137,10 @@ router.put('/:email', auth, verifyUserData, (req, res, next) => {
     })
 })
 
+/**
+ * The endpoint at which the user or an admin can delete their account
+ * (not implemented on the client-side yet)
+ */
 router.delete('/:email', auth, (req, res, next) => {
   if (req.email != req.params.email && req.role != "admin") {
     res.status(403).json({ error: true, message: "Forbidden" })
