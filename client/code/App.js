@@ -13,6 +13,7 @@ import MissionsView from './view/MissionsView.js';
 import FeedView from './view/FeedView.js';
 import MessagesView from './view/MessagesView.js';
 import ResourcesView from './view/ResourcesView.js';
+import ResourceAddView from './view/ResourceAddView.js';
 import CohortsView from './view/CohortsView.js';
 import AdminView from './view/AdminView.js';
 import SettingsView from './view/SettingsView.js';
@@ -48,6 +49,7 @@ export default class App {
       feed: new FeedView(this.pageEl, this),
       messages: new MessagesView(this.pageEl, this),
       resources: new ResourcesView(this.pageEl, this),
+      resourceAdd: new ResourceAddView(this.pageEl, this),
       cohorts: new CohortsView(this.pageEl, this),
       admin: new AdminView(this.pageEl, this),
       settings: new SettingsView(this.pageEl, this),

@@ -55,3 +55,4 @@ export default class Resource {
   get fileURL() {
     return this.fileURL;
   }
+}
