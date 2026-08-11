@@ -1,3 +1,5 @@
+import { escapeHtml } from '../util/dom.js';
+
 export default class ResourcesView {
   constructor(container, app) {
     this.container = container;
@@ -7,6 +9,8 @@ export default class ResourcesView {
   async mount() {
     const user = this.app.auth.currentUser;
     const canAdd = !user.isStudent; // Flag for if the user should be allowed to add resources.
+
+    const resources = await this.app.resources.getAllResources();
 
     let html = '<h2>Resource Hub</h2>';
 
@@ -18,7 +22,21 @@ export default class ResourcesView {
       `;
     }
 
-    html += '<p>No resources yet.</p>';
+    if (resources.length <= 0) {
+      html += '<p>No resources yet.</p>';
+    }
+    else {
+      html += '<div class="card">';
+      resources.forEach(resource => {
+        html += ` 
+        <div class="card">
+          <h3>${escapeHtml(resource.title)}</h3>
+          <p>${escapeHtml(resource.desc)}</p>
+        </div>
+      `;
+    })
+    html += '</div>';
+  }
 
     this.container.innerHTML = html;
 
