@@ -6,6 +6,8 @@ import knexConfig from './knexfile.js'
 import authenticationRouter from './routes/authentication.js'
 import userRouter from './routes/user.js'
 import cohortRouter from './routes/cohort.js'
+import conversationRouter from './routes/conversation.js'
+import messageRouter from './routes/message.js'
 
 import morgan from 'morgan'
 import swaggerUI from 'swagger-ui-express'
@@ -36,6 +38,7 @@ app.get('/', swaggerUI.setup(swaggerDocument))
 
 app.use('/user', authenticationRouter, userRouter)
 app.use('/cohort', cohortRouter)
+app.use('/conversation', conversationRouter, messageRouter)
 
 app.listen(port, () => {
   console.log(`Server listening on http://localhost:${port}`);
