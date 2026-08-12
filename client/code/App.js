@@ -30,7 +30,7 @@ export default class App {
     this.auth = new AuthController(this.api);
     this.users = new UserController(this.api);
     this.cohorts = new CohortController(this.api);
-    this.messages = new MessageController();
+    this.messages = new MessageController(this.api);
 
     this.loginScreen = document.getElementById('login-screen');
     this.appScreen = document.getElementById('app');
