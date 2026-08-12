@@ -5,10 +5,12 @@ const router = express.Router()
 
 router.get('/', auth, (req, res, next) => {
   req.db('user')
+    .select('cohort')
+    .count('user_id', { as: 'userCount' })
     .whereNot({
       role: 'admin'
     })
-    .distinct('cohort')
+    .groupBy('cohort')
     .then(cohorts => {
       res.json(cohorts)
 
