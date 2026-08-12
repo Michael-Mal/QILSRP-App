@@ -855,7 +855,7 @@
         ],
         "responses": {
           "200": {
-            "description": "An array of cohort names",
+            "description": "An array of cohort names and the number of users within each",
             "content": {
               "application/json": {
                 "schema": {
@@ -867,6 +867,12 @@
                         "type": "string",
                         "examples": [
                           "Brisbane Cohort"
+                        ]
+                      },
+                      "userCount": {
+                        "type": "int",
+                        "examples": [
+                          15
                         ]
                       }
                     }
