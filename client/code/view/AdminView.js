@@ -62,9 +62,9 @@ export default class AdminView {
       <div class="card">
         <h3>Cohorts</h3>
         <table>
-          <thead><tr><th>Name</th><th>Ranger</th><th>Members</th></tr></thead>
+          <thead><tr><th>Name</th><th>Members</th></tr></thead>
           <tbody>
-            ${cohorts.map(c => `<tr><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.rangerName || '-')}</td><td>${c.members.length}</td></tr>`).join('')}
+            ${cohorts.map(c => `<tr><td>${escapeHtml(c.name)}</td><td>${c.userCount}</td></tr>`).join('')}
           </tbody>
         </table>
       </div>
