@@ -39,7 +39,9 @@ const optionalAuth = (req, res, next) => {
     }
     const token = req.headers.authorization.replace(/^Bearer /, "")
     try {
-      req.email = jwt.verify(token, process.env.JWT_SECRET).email
+      const decodedToken = jwt.verify(token, process.env.JWT_SECRET)
+      req.email = decodedToken.email;
+      req.role = decodedToken.role;
     } catch (e) {
       console.log(e.name)
       if (e.name === 'TokenExpiredError') {
@@ -54,4 +56,18 @@ const optionalAuth = (req, res, next) => {
   next()
 }
 
-export { auth, optionalAuth }
+/**
+ * Verifies that the authenticated user is an administrator. If using, call this function after calling auth().
+ * @returns An error if the currently authenticated user is not an administrator
+ */
+const verifyAdmin = (req, res, next) => {
+  if (req.role != 'admin') {
+    res.status(403).json({ error: true, message: "Current user is not authorised to perform this function" })
+    return
+
+  }
+
+  next()
+}
+
+export { auth, optionalAuth, verifyAdmin }
