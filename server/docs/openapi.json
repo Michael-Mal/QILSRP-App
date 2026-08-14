@@ -243,7 +243,92 @@
                         "message": {
                           "type": "string",
                           "examples": [
-                            "Request body incomplete, both email and password are required"
+                            "Request body incomplete: name, email, password, cohort, and role are required."
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Email must be a valid email"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Password must contain at least 8 characters"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Password must contain a capital letter"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Password must contain a number"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Password must contain a special character"
                           ]
                         }
                       }

@@ -14,6 +14,52 @@ const verifyUserData = (req, res, next) => {
       message: "Request body incomplete: name, email, password, cohort, and role are required."
     })
     return
+
+  }
+
+  if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(email)) {
+    res.status(400).json({
+      error: true,
+      message: "Email must be a valid email"
+    })
+    return
+
+  }
+
+  if (password.length < 8) {
+    res.status(400).json({
+      error: true,
+      message: "Password must contain at least 8 characters"
+    })
+    return
+
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    res.status(400).json({
+      error: true,
+      message: "Password must contain a capital letter"
+    })
+    return
+
+  }
+
+  if (!/[0-9]/.test(password)) {
+    res.status(400).json({
+      error: true,
+      message: "Password must contain a number"
+    })
+    return
+
+  }
+
+  if (!/[^a-zA-Z0-9]/.test(password)) {
+    res.status(400).json({
+      error: true,
+      message: "Password must contain a special character"
+    })
+    return
+
   }
 
   if (!roles.includes(role)) {
@@ -22,6 +68,7 @@ const verifyUserData = (req, res, next) => {
       message: "Role must be one of 'student', 'ranger', or 'admin'"
     })
     return
+
   }
   
   next()
