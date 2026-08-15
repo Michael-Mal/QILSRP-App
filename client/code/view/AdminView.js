@@ -6,6 +6,9 @@ export default class AdminView {
     this.app = app;
   }
 
+  nameFilter = null
+  emailFilter = null
+  statusFilter = null
   cohortFilter = null
   roleFilter = null
 
@@ -17,7 +20,7 @@ export default class AdminView {
     }
 
     const [users, cohorts] = await Promise.all([
-      this.app.users.list(this.cohortFilter, this.roleFilter),
+      this.app.users.list(this.nameFilter, this.emailFilter, this.statusFilter, this.cohortFilter, this.roleFilter),
       this.app.cohorts.list(),
     ]);
 
@@ -37,6 +40,9 @@ export default class AdminView {
 
       <div class="card">
         <h3>Users</h3>
+        <label>Name</label><input type="text" id="admin-fil-name" />
+        <label>Email</label><input type="text" id="admin-fil-email" />
+        <label>Status</label><input type="text" id="admin-fil-status" />
         <label>Cohort</label><input type="text" id="admin-fil-cohort" />
         <label>Role</label><input type="text" id="admin-fil-role" />
         <button data-action="filter">Filter</button>
@@ -52,6 +58,7 @@ export default class AdminView {
                 <td>
                   <button data-action="edit-user" data-email="${escapeHtml(u.email)}">Edit</button>
                   <button data-action="delete-user" data-email="${escapeHtml(u.email)}">Delete</button>
+                  ${u.status == "Pending" ? `<button data-action="verify-user" data-email="${escapeHtml(u.email)}">Verify</button>` : ""}
                 </td>
               </tr>
             `).join('')}
@@ -88,6 +95,10 @@ export default class AdminView {
     this.container.querySelectorAll('[data-action="delete-user"]').forEach(button => {
       button.addEventListener('click', () => this.deleteUser(button.dataset.email));
     });
+
+    this.container.querySelectorAll('[data-action="verify-user"]').forEach(button => {
+      button.addEventListener('click', () => this.verifyUser(button.dataset.email));
+    });
   }
 
   async registerUser() {
@@ -111,6 +122,9 @@ export default class AdminView {
   }
 
   async filterUsers() {
+    this.nameFilter = this.container.querySelector('#admin-fil-name').value.trim();
+    this.emailFilter = this.container.querySelector('#admin-fil-email').value.trim();
+    this.statusFilter = this.container.querySelector('#admin-fil-status').value.trim();
     this.cohortFilter = this.container.querySelector('#admin-fil-cohort').value.trim();
     this.roleFilter = this.container.querySelector('#admin-fil-role').value.trim();
     await this.mount();
@@ -131,6 +145,12 @@ export default class AdminView {
   async deleteUser(email) {
     if (!confirm(`Delete user ${email}? This cannot be undone.`)) return;
     await this.app.users.remove(email);
+    await this.mount();
+  }
+
+  async verifyUser(email) {
+    if (!confirm(`Verfy user ${email}?`)) return;
+    await this.app.users.verify(email);
     await this.mount();
   }
 }
