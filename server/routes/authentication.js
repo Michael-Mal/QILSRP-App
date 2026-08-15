@@ -1,7 +1,9 @@
 import express from 'express'
-import { verifyUserLoginData } from '../middleware/data-verification.js'
+import { verifyUserLoginData, verifyUserPasswordData } from '../middleware/data-verification.js'
 import jwt from 'jsonwebtoken'
 import argon2 from 'argon2'
+import { auth } from '../middleware/authorisation.js'
+
 
 /**
  * Retrieves the secret used when validating JWT tokens from .env
@@ -74,8 +76,55 @@ router.post('/login', verifyUserLoginData, (req, res, next) => {
       }
       else if (e.message == "User has not yet been verified by an administrator"
         || e.message == "User status is not active") {
-          res.status(403).json({ error: true, message: e.message })
-        
+        res.status(403).json({ error: true, message: e.message })
+
+      }
+      else {
+        console.log(e.message)
+        res.status(500).json({ error: true })
+
+      }
+    })
+})
+
+/**
+ * The endpoint at which the current user can change their password
+ */
+router.put('/password', auth, verifyUserPasswordData, (req, res, next) => {
+  const { currentPassword, newPassword } = req.body
+
+  req.db.from("user")
+    .select("password_hash")
+    .where("email", "=", req.email)
+    .then(users => {
+      // Verify if passwords match
+      const hash = users[0].password_hash
+      return argon2.verify(hash, currentPassword)
+
+    })
+    .then(match => {
+      if (match) {
+        // Passwords match, update password
+        return argon2.hash(newPassword)
+
+      } else {
+        // If passwords do not match, return error response
+        throw new Error("Incorrect password")
+
+      }
+    })
+    .then(password_hash => {
+      return req.db.from("user").where("email", "=", req.email).update('password_hash', password_hash)
+
+    })
+    .then(() => {
+      res.json({ message: "User password updated" })
+
+    })
+    .catch(e => {
+      if (e.message == "Incorrect password") {
+        res.status(401).json({ error: true, message: e.message })
+
       }
       else {
         console.log(e.message)

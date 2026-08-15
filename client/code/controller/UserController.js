@@ -25,8 +25,8 @@ export default class UserController {
     return rows.map(row => new User(row));
   }
 
-  async update(email, { name, password, cohort, role }) {
-    return this.api.put(`/user/${encodeURIComponent(email)}`, { name, email, password, cohort, role }, { auth: true });
+  async update(email, { name, cohort, role }) {
+    return this.api.put(`/user/${encodeURIComponent(email)}`, { name, email, cohort, role }, { auth: true });
   }
 
   async remove(email) {

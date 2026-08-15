@@ -153,7 +153,7 @@ router.get('/', auth, verifyAdmin, (req, res, next) => {
  * The endpoint at which the user or an admin can edit their details
  */
 router.put('/:email', auth, verifyUserData, (req, res, next) => {
-  const { name, email, password, cohort, role } = req.body
+  const { name, email, cohort, role } = req.body
 
   // Check if such a user exists
   req.db('user')
@@ -168,13 +168,9 @@ router.put('/:email', auth, verifyUserData, (req, res, next) => {
         throw Error("Forbidden")
       }
 
-      return argon2.hash(password)
-
-    })
-    .then((password_hash) => {
       return req.db('user')
         .where('email', req.params.email)
-        .update({ name, email, password_hash, cohort, role })
+        .update({ name, email, cohort, role })
 
     })
     .then(() => {

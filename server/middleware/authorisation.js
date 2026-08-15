@@ -8,17 +8,23 @@ const auth = (req, res, next) => {
   if (!('authorization' in req.headers) || !req.headers.authorization.match(/^Bearer /)) {
     res.status(401).json({ error: true, message: "Authorization header ('Bearer token') not found" })
     return
+
   }
   const token = req.headers.authorization.replace(/^Bearer /, "")
   try {
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET)
     req.email = decodedToken.email;
     req.role = decodedToken.role;
-  } catch (e) {
+
+  }
+  catch (e) {
     if (e.name === 'TokenExpiredError') {
       res.status(401).json({ error: true, message: 'JWT token has expired' })
-    } else {
+
+    }
+    else {
       res.status(401).json({ error: true, message: 'Invalid JWT token' })
+
     }
     return
   }
@@ -36,13 +42,17 @@ const optionalAuth = (req, res, next) => {
     if (!req.headers.authorization.match(/^Bearer /)) {
       res.status(401).json({ error: true, message: "Authorization header is malformed" })
       return
+
     }
     const token = req.headers.authorization.replace(/^Bearer /, "")
+
     try {
       const decodedToken = jwt.verify(token, process.env.JWT_SECRET)
       req.email = decodedToken.email;
       req.role = decodedToken.role;
-    } catch (e) {
+
+    }
+    catch (e) {
       console.log(e.name)
       if (e.name === 'TokenExpiredError') {
         res.status(401).json({ error: true, message: 'JWT token has expired' })
@@ -50,6 +60,7 @@ const optionalAuth = (req, res, next) => {
         res.status(401).json({ error: true, message: 'Invalid JWT token' })
       }
       return
+      
     }
   }
 
