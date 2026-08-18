@@ -113,7 +113,7 @@ export default class AdminView {
     if (!name || !email || !password || !cohort || !role ) { alert('Name, email, password, cohort, and role are required.'); return; }
 
     try {
-      await this.app.auth.register({ name, email, password, cohort, role });
+      await this.app.auth.register({ name, email, password, cohort, role, auth: true });
       await this.mount();
     } catch (error) {
       errorEl.textContent = error.message || 'Registration failed.';

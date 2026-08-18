@@ -5,6 +5,7 @@ import UserController from './controller/UserController.js';
 import CohortController from './controller/CohortController.js';
 import MessageController from './controller/MessageController.js';
 
+import RegisterView from './view/RegisterView.js';
 import LoginView from './view/LoginView.js';
 import NavView from './view/NavView.js';
 import HomeView from './view/HomeView.js';
@@ -33,12 +34,14 @@ export default class App {
     this.messages = new MessageController(this.api);
 
     this.loginScreen = document.getElementById('login-screen');
+    this.registerScreen = document.getElementById('register-screen');
     this.appScreen = document.getElementById('app');
     this.headerUser = document.getElementById('header-user');
     this.navEl = document.getElementById('nav');
     this.pageEl = document.getElementById('page');
 
     this.loginView = new LoginView(this.loginScreen, this);
+    this.registerView = new RegisterView(this.registerScreen, this),
     this.navView = new NavView(this.navEl, this);
 
     this.pages = {
@@ -68,8 +71,15 @@ export default class App {
     }
   }
 
+  showRegister() {
+    this.loginScreen.style.display = 'none';
+    this.registerScreen.style.display = 'block';
+    this.registerView.mount();
+  }
+
   showApp() {
     this.loginScreen.style.display = 'none';
+    this.registerScreen.style.display = 'none';
     this.appScreen.style.display = 'block';
     this.headerUser.textContent = `${this.auth.currentUser.name} (${this.auth.currentUser.role})`;
     this.navView.build();
