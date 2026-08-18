@@ -4,6 +4,7 @@ import AuthController from './controller/AuthController.js';
 import UserController from './controller/UserController.js';
 import CohortController from './controller/CohortController.js';
 import MessageController from './controller/MessageController.js';
+import SettingsController from './controller/SettingsController.js';
 
 import RegisterView from './view/RegisterView.js';
 import LoginView from './view/LoginView.js';
@@ -32,6 +33,7 @@ export default class App {
     this.users = new UserController(this.api);
     this.cohorts = new CohortController(this.api);
     this.messages = new MessageController(this.api);
+    this.settings = new SettingsController(this.api)
 
     this.loginScreen = document.getElementById('login-screen');
     this.registerScreen = document.getElementById('register-screen');

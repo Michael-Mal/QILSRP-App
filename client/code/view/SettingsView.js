@@ -18,6 +18,13 @@ export default class SettingsView {
         <p>Email: ${escapeHtml(user.email)}</p>
       </div>
       <div class="card">
+        <h3>Change Password</h3>
+        <label>Current Password</label><input type="password" id="chpass-current" />
+        <label>New Password</label><input type="password" id="chpass-new" />
+        <button data-action="chpass">Confirm</button>
+        <p id="chpass-error" class="error-text"></p>
+      </div>
+      <div class="card">
         <h3>Preferences</h3>
         <label><input type="checkbox" checked /> Push Notifications</label><br/>
         <label><input type="checkbox" /> Offline Mode</label>
@@ -31,6 +38,27 @@ export default class SettingsView {
       <button data-action="logout">Logout</button>
     `;
 
+    const changePasswordBtn = this.container.querySelector('[data-action="chpass"]');
+    if (changePasswordBtn) changePasswordBtn.addEventListener('click', () => this.changePassword());
+
     this.container.querySelector('[data-action="logout"]').addEventListener('click', () => this.app.logout());
+  }
+
+  async changePassword() {
+    const currentPassword = this.container.querySelector('#chpass-current').value.trim();
+    const newPassword = this.container.querySelector('#chpass-new').value.trim();
+    const errorEl = this.container.querySelector('#chpass-error');
+    errorEl.style.display = 'none';
+
+    if (!currentPassword || !newPassword ) { alert('Current and new password are required.'); return; }
+
+    try {
+      await this.app.settings.changePassword(currentPassword, newPassword);
+      await this.mount();
+      alert("Password updated successfully")
+    } catch (error) {
+      errorEl.textContent = error.message || 'Password editing failed.';
+      errorEl.style.display = 'block';
+    }
   }
 }
