@@ -13,12 +13,16 @@ const SEED = [
  * out later without changing any view.
  */
 export default class CohortController {
-  constructor() {
+  constructor(apiClient) {
     this.repo = new LocalRepository('qilsrp.cohorts', SEED);
+    this.api = apiClient;
   }
 
   async list() {
-    const rows = await this.repo.all();
+    const rows = await this.api.get('/cohort/', { auth: true });
+    rows.forEach(row => {
+      row.name = row.cohort
+    });
     return rows.map(row => new Cohort(row));
   }
 

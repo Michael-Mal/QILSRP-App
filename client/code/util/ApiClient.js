@@ -20,7 +20,6 @@ export default class ApiClient {
 
   async request(path, { method = 'GET', body, auth = false } = {}) {
     const headers = { 'Content-Type': 'application/json' };
-
     if (auth) {
       const token = Storage.getToken();
       if (!token) throw new ApiError('Not authenticated', 401);

@@ -1,7 +1,9 @@
 import express from 'express'
-import { verifyUserLoginData } from '../middleware/data-verification.js'
+import { verifyUserLoginData, verifyUserPasswordData } from '../middleware/data-verification.js'
 import jwt from 'jsonwebtoken'
 import argon2 from 'argon2'
+import { auth } from '../middleware/authorisation.js'
+
 
 /**
  * Retrieves the secret used when validating JWT tokens from .env
@@ -15,7 +17,8 @@ const router = express.Router()
  */
 router.post('/login', verifyUserLoginData, (req, res, next) => {
   const { email, password } = req.body
-  let name, role
+  let name, role, status
+
   // Determine if user already exists in table
   req.db.from("user").select("*").where("email", "=", email)
     .then(users => {
@@ -26,11 +29,24 @@ router.post('/login', verifyUserLoginData, (req, res, next) => {
       const hash = users[0].password_hash
       name = users[0].name
       role = users[0].role
+      status = users[0].status
       return argon2.verify(hash, password)
+
     })
     .then(match => {
       if (match) {
-        // If passwords match, return JWT
+        // Passwords match, check if user status is active
+        return status
+
+      } else {
+        // If passwords do not match, return error response
+        throw new Error("Incorrect email or password")
+
+      }
+    })
+    .then(status => {
+      if (status == "Active") {
+        // Return JWT
         const expiresIn = 86400
         const exp = Math.floor(Date.now() / 1000) + expiresIn
         const token = jwt.sign({ exp, email, role }, process.env.JWT_SECRET)
@@ -43,18 +59,77 @@ router.post('/login', verifyUserLoginData, (req, res, next) => {
           role
         })
 
-      } else {
-        // If passwords do not match, return error response
-        throw new Error("Incorrect email or password")
+      }
+      else if (status == "Pending") {
+        throw new Error("User has not yet been verified by an administrator")
+
+      }
+      else {
+        throw new Error("User status is not active")
+
       }
     })
     .catch(e => {
       if (e.message == "Incorrect email or password") {
         res.status(401).json({ error: true, message: e.message })
+
+      }
+      else if (e.message == "User has not yet been verified by an administrator"
+        || e.message == "User status is not active") {
+        res.status(403).json({ error: true, message: e.message })
+
       }
       else {
         console.log(e.message)
         res.status(500).json({ error: true })
+
+      }
+    })
+})
+
+/**
+ * The endpoint at which the current user can change their password
+ */
+router.put('/password', auth, verifyUserPasswordData, (req, res, next) => {
+  const { currentPassword, newPassword } = req.body
+
+  req.db.from("user")
+    .select("password_hash")
+    .where("email", "=", req.email)
+    .then(users => {
+      // Verify if passwords match
+      const hash = users[0].password_hash
+      return argon2.verify(hash, currentPassword)
+
+    })
+    .then(match => {
+      if (match) {
+        // Passwords match, update password
+        return argon2.hash(newPassword)
+
+      } else {
+        // If passwords do not match, return error response
+        throw new Error("Incorrect password")
+
+      }
+    })
+    .then(password_hash => {
+      return req.db.from("user").where("email", "=", req.email).update('password_hash', password_hash)
+
+    })
+    .then(() => {
+      res.json({ message: "User password updated" })
+
+    })
+    .catch(e => {
+      if (e.message == "Incorrect password") {
+        res.status(401).json({ error: true, message: e.message })
+
+      }
+      else {
+        console.log(e.message)
+        res.status(500).json({ error: true })
+
       }
     })
 })

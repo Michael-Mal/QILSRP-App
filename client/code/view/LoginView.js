@@ -6,10 +6,12 @@ export default class LoginView {
     this.passwordInput = container.querySelector('#login-password');
     this.errorEl = container.querySelector('#login-error');
     this.submitBtn = container.querySelector('#login-submit');
+    this.registerBtn = container.querySelector('#go-to-register');
   }
 
   mount() {
     this.submitBtn.addEventListener('click', () => this.submit());
+    this.registerBtn.addEventListener('click', () => this.app.showRegister());
   }
 
   async submit() {
