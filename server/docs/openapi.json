@@ -1624,6 +1624,7 @@
     },
     "/event/": {
       "post": {
+        "description": "Creates a new event",
         "tags": [
           "Event"
         ],
@@ -1631,7 +1632,64 @@
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "description": "The details of the event",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "examples": [
+                      "Melissa Stone"
+                    ]
+                  },
+                  "datetime": {
+                    "type": "string",
+                    "examples": [
+                      "2030-01-01 11:00:00"
+                    ]
+                  },
+                  "location": {
+                    "type": "string",
+                    "examples": [
+                      "Archer Point Site"
+                    ]
+                  },
+                  "description": {
+                    "type": "string",
+                    "examples": [
+                      "This planned burn will maintain the health of our bushland"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Event successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Event with ID 1 successfully created"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       },
       "get": {
         "description": "Returns all of the user's events, confirmed and pending",
@@ -1645,7 +1703,7 @@
         ],
         "responses": {
           "200": {
-            "description": "An array of event details",
+            "description": "An array of the user's event details",
             "content": {
               "application/json": {
                 "schema": {
@@ -1682,6 +1740,12 @@
                         "examples": [
                           "This planned burn will maintain the health of our bushland"
                         ]
+                      },
+                      "confirmed": {
+                        "type": "boolean",
+                        "examples": [
+                          "true"
+                        ]
                       }
                     }
                   }
@@ -1690,8 +1754,11 @@
             }
           }
         }
-      },
+      }
+    },
+    "/event/{id}": {
       "put": {
+        "description": "Update an event",
         "tags": [
           "Event"
         ],
@@ -1699,9 +1766,78 @@
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the event",
+            "required": true,
+            "schema": {
+              "type": "int"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The updated details of the event",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "examples": [
+                      "Melissa Stone"
+                    ]
+                  },
+                  "datetime": {
+                    "type": "string",
+                    "examples": [
+                      "2030-01-01 11:00:00"
+                    ]
+                  },
+                  "location": {
+                    "type": "string",
+                    "examples": [
+                      "Archer Point Site"
+                    ]
+                  },
+                  "description": {
+                    "type": "string",
+                    "examples": [
+                      "This planned burn will maintain the health of our bushland"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Event with ID 1 successfully updated"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       },
       "delete": {
+        "description": "Deletes the event",
         "tags": [
           "Event"
         ],
@@ -1709,17 +1845,187 @@
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the event",
+            "required": true,
+            "schema": {
+              "type": "int"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data deleted successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Event with ID 1 has been deleted"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Logged-in user is not an admin or does not match the user whose event you are attempting to modify",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Forbidden"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. Click on 'Schema' below to see the possible error responses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Authorization header ('Bearer token') not found"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "JWT token has expired"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Invalid JWT token"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Authorization header is malformed"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No event was found containing this ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Event not found"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/event/{id}/members": {
       "post": {
+        "description": "Add an array of users to the event",
         "tags": [
           "Event"
         ],
         "security": [
           {
             "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the event",
+            "required": true,
+            "schema": {
+              "type": "int"
+            }
           }
         ]
       },
@@ -1731,6 +2037,17 @@
         "security": [
           {
             "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the event",
+            "required": true,
+            "schema": {
+              "type": "int"
+            }
           }
         ],
         "responses": {
@@ -1761,10 +2078,10 @@
                           "ranger"
                         ]
                       },
-                      "status": {
-                        "type": "string", 
+                      "confirmed": {
+                        "type": "boolean",
                         "examples": [
-                          "confirmed"
+                          "true"
                         ]
                       }
                     }
@@ -1776,6 +2093,7 @@
         }
       },
       "delete": {
+        "description": "Removes an array of users from the event",
         "tags": [
           "Event"
         ],
@@ -1783,10 +2101,22 @@
           {
             "bearerAuth": []
           }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the event",
+            "required": true,
+            "schema": {
+              "type": "int"
+            }
+          }
         ]
       }
     },
     "/event/{id}/confirm": {
+      "description": "Confirm that the current user will be attending the event",
       "post": {
         "tags": [
           "Event"
@@ -1794,6 +2124,17 @@
         "security": [
           {
             "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the event",
+            "required": true,
+            "schema": {
+              "type": "int"
+            }
           }
         ]
       }
