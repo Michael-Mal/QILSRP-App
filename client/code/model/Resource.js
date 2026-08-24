@@ -1,35 +1,57 @@
-const SUPPORTED_TYPES = ['video', 'audio', 'image', 'link', 'pdf']
+const SUPPORTED_TYPES = ['video', 'audio', 'image', 'pdf']
+
+const SUPPORTED_ACCESS_LEVELS = ['student', 'ranger', 'admin']
 
 /**
 * Base Resource class that will cover any type of resource uploaded to the hub.
 * Will most likely have several classes extending it for different resource types in the future.
 */
 export default class Resource {
-  constructor({ id, type, title, desc, uploaderID, fileRef, creationDate = null } = {}) {
+  constructor({ id, type, title, uploaderID, fileRef, parentID, accessLevel = null, creationDate = null } = {}) {
     if (!SUPPORTED_TYPES.includes(type.toLowerCase())) {
         throw new Error(`Resource type ${type.toLowerCase()} is not supported`);
     }
-    this.id = id; // TODO: Find what ID to set from db?
+
+    // If access level is null, set to student by default. If access level is provided, check if it is valid.
+    if (accessLevel) {
+      if (!SUPPORTED_ACCESS_LEVELS.includes(accessLevel.toLowerCase())) {
+        throw new Error(`Access level ${accessLevel.toLowerCase()} is not supported`);
+      }
+      else {
+        this.accessLevel = accessLevel.toLowerCase();
+      }
+    } else {
+      this.accessLevel = 'student'; // Default access level is student if not provided
+    }
+
+    this.id = id;
     this.type = type.toLowerCase(); // type of resource (video, audio, image, link, etc.).
     this.title = title;
-    this.desc = desc; // TODO: Add character limits for title and description
     this.uploaderID = uploaderID;
     this.fileRef = fileRef;
+    this.parentID = parentID; // ID of the folder this resource resides in.
+
     this.creationDate = creationDate ?? new Date().toISOString();
-    //TODO: Add more properties for general resources that allow for better filtering? Tags?
     // Or implement a separate filtering system with resourceIDs and tags.
-  }
-
-  get resTitle() {
-  return this.title;
-  }
-
-  get resType() {
-  return this.type;
   }
 
   isType(type) {
     return (this.type || '').toLowerCase() === type.toLowerCase();
+  }
+
+  // Check if a user has permission to access this resource.
+  // TODO: Implement more robust system including cohort exclusions?
+  canAccess(user) {
+    switch (this.accessLevel) {
+      case 'admin':
+        return user.isAdmin;
+      case 'ranger':
+        return user.isRanger || user.isAdmin; // User is ranger or higher
+      case 'student':
+        return true; // All users can access student-level resources.
+      default:
+        return false; // Unknown access level, deny access by default.
+    }
   }
 
   get isVideo() {
@@ -44,15 +66,7 @@ export default class Resource {
     return this.isType('image');
   }
 
-  get isLink() {
-    return this.isType('link');
-  }
-
   get isPDF() {
     return this.isType('pdf');
-  }
-
-  get resFileRef() {
-    return this.fileRef;
   }
 }
