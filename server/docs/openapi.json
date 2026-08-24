@@ -678,22 +678,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                      "type": "object",
-                      "properties": {
-                        "error": {
-                          "type": "boolean",
-                          "examples": [
-                            true
-                          ]
-                        },
-                        "message": {
-                          "type": "string",
-                          "examples": [
-                            "Current user is not authorised to perform this function"
-                          ]
-                        }
-                      }
-                    
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Current user is not authorised to perform this function"
+                      ]
+                    }
+                  }
                 }
               }
             }
@@ -1621,6 +1620,182 @@
             }
           }
         }
+      }
+    },
+    "/event/": {
+      "post": {
+        "tags": [
+          "Event"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "get": {
+        "description": "Returns all of the user's events, confirmed and pending",
+        "tags": [
+          "Event"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An array of event details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "user": {
+                        "type": "string",
+                        "examples": [
+                          "Melissa Stone"
+                        ]
+                      },
+                      "name": {
+                        "type": "string",
+                        "examples": [
+                          "Planned Burn"
+                        ]
+                      },
+                      "datetime": {
+                        "type": "string",
+                        "examples": [
+                          "2030-01-01 11:00:00"
+                        ]
+                      },
+                      "location": {
+                        "type": "string",
+                        "examples": [
+                          "Archer Point Site"
+                        ]
+                      },
+                      "description": {
+                        "type": "string",
+                        "examples": [
+                          "This planned burn will maintain the health of our bushland"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Event"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Event"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/event/{id}/members": {
+      "post": {
+        "tags": [
+          "Event"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "get": {
+        "description": "Returns all of the event's users, confirmed and pending",
+        "tags": [
+          "Event"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An array of the users' name, email, role, and invitation status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "examples": [
+                          "Michelle Rivers"
+                        ]
+                      },
+                      "email": {
+                        "type": "string",
+                        "examples": [
+                          "ranger0@email.com"
+                        ]
+                      },
+                      "role": {
+                        "type": "string",
+                        "examples": [
+                          "ranger"
+                        ]
+                      },
+                      "status": {
+                        "type": "string", 
+                        "examples": [
+                          "confirmed"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Event"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/event/{id}/confirm": {
+      "post": {
+        "tags": [
+          "Event"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     }
   }
