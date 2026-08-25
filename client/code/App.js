@@ -5,6 +5,7 @@ import UserController from './controller/UserController.js';
 import CohortController from './controller/CohortController.js';
 import MessageController from './controller/MessageController.js';
 import ResourceController from './controller/ResourceController.js';
+import FolderController from './controller/FolderController.js';
 import SettingsController from './controller/SettingsController.js';
 
 import RegisterView from './view/RegisterView.js';
@@ -16,7 +17,6 @@ import MissionsView from './view/MissionsView.js';
 import FeedView from './view/FeedView.js';
 import MessagesView from './view/MessagesView.js';
 import ResourcesView from './view/ResourcesView.js';
-import ResourceAddView from './view/ResourceAddView.js';
 import CohortsView from './view/CohortsView.js';
 import AdminView from './view/AdminView.js';
 import SettingsView from './view/SettingsView.js';
@@ -37,6 +37,7 @@ export default class App {
     this.messages = new MessageController(this.api);
     this.settings = new SettingsController(this.api);
     this.resources = new ResourceController(this.api);
+    this.folders = new FolderController(this.api);
 
     this.loginScreen = document.getElementById('login-screen');
     this.registerScreen = document.getElementById('register-screen');
@@ -56,7 +57,6 @@ export default class App {
       feed: new FeedView(this.pageEl, this),
       messages: new MessagesView(this.pageEl, this),
       resources: new ResourcesView(this.pageEl, this),
-      resourceAdd: new ResourceAddView(this.pageEl, this),
       cohorts: new CohortsView(this.pageEl, this),
       admin: new AdminView(this.pageEl, this),
       settings: new SettingsView(this.pageEl, this),

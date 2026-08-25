@@ -148,8 +148,8 @@ const verifyUserPasswordData = (req, res, next) => {
  * Validates the format of a resource title, enforcing character restrictions and other rules
  */
 const verifyResourceTitle = (title) => {
-  if (title.length > 50) {
-    throw new Error("Resource title must not exceed 50 characters")
+  if (title.length > 255) {
+    throw new Error("Resource title must not exceed 255 characters")
   }
 
   if (title.trim() === "") {
@@ -161,14 +161,36 @@ const verifyResourceTitle = (title) => {
   }
 }
 
+/**
+ * Validates the format and length of a folders name.
+ * @param {string} name - the name of the folder
+ */
+const verifyFolderName = (name) => {
+  if (name.length > 128) {
+    throw new Error("Folder name must not exceed 128 characters")
+  }
 
+  if (name.trim() === "") {
+    throw new Error("Folder name must not be empty")
+  }
+
+  if (/[<>:"/|\\?*]/.test(name)) {
+    throw new Error('Folder name contains invalid characters. Restricted characters: < > : " / | \\ ? *')
+  }
+}
+
+
+/**
+ * Verifies the information provided for a resource being added to the database, throwing an error if some information is invalid.
+ * @returns 
+ */
 const verifyResourceData = (req, res, next) => {
-  const { title, type, uploaderID, fileRef, folderID, accessLevel } = req.body ?? {}
+  const { title, type, fileRef, parentID, accessLevel } = req.body ?? {}
 
-  if (!title || !type || !uploaderID || !fileRef || !folderID || !accessLevel) {
+  if (!title || !type || !fileRef || !parentID || !accessLevel) {
     res.status(400).json({
       error: true,
-      message: "Request body incomplete, some required fields are missing. Required fields: title, type, uploaderID, fileRef, folderID, accessLevel"
+      message: "Request body incomplete, some required fields are missing. Required fields: title, type, fileRef, folderID, accessLevel"
     })
     return
   }
@@ -184,6 +206,39 @@ const verifyResourceData = (req, res, next) => {
     return
   }
 
+  // Check if accessLevel is a valid value, currently must be one of the roles
+  if (!roles.includes(accessLevel)) {
+    res.status(400).json({
+      error: true,
+      message: "Access level must be one of 'student', 'ranger', or 'admin'"
+    })
+    return
+  }
+
+  next()
+}
+
+const verifyFolderData = (req, res, next) => {
+  const { name, parentID, accessLevel} = req.body ?? {}
+
+  // parentID cannot be null for any folder but the root, which has been pre-established in the table.
+  if (!name || !parentID || !accessLevel) {
+    res.status(400).json({
+      error: true,
+      message: "Request body incomplete, some required fields are missing. Required fields: name, parentID, accessLevel"
+    })
+  }
+
+  try {
+    verifyFolderTitle(name)
+  }
+  catch (e) {
+      res.status(400).json({
+      error: true,
+      message: e.message
+    })
+    return
+  }
 
   // Check if accessLevel is a valid value, currently must be one of the roles
   if (!roles.includes(accessLevel)) {
@@ -194,6 +249,7 @@ const verifyResourceData = (req, res, next) => {
     return
   }
 
+  next()
 }
 
-export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyResourceData }
+export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyResourceData, verifyFolderData }

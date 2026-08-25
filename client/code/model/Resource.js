@@ -25,7 +25,7 @@ export default class Resource {
     }
 
     this.id = id;
-    this.type = type.toLowerCase(); // type of resource (video, audio, image, link, etc.).
+    this.type = type.toLowerCase(); // type of resource (video, audio, image, etc.).
     this.title = title;
     this.uploaderID = uploaderID;
     this.fileRef = fileRef;

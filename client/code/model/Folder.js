@@ -1,10 +1,11 @@
 export default class Folder {
-    constructor({ id, name, parentID = null, accessLevel = null, creationDate = null } = {}) {
+    constructor({ id, name, parentID = null, accessLevel = null, creationDate = null, path = [] } = {}) {
         this.id = id;
         this.name = name;
         this.parentID = parentID;
         this.accessLevel = accessLevel ?? 'student'; // Default access level is 'student' if not provided
         this.creationDate = creationDate ?? new Date().toISOString();
+        this.path = path;
     }
 
     // Check if a user has permission to access this folder.

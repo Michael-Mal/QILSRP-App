@@ -1,5 +1,5 @@
 import express from 'express'
-import { auth } from '../middleware/authorisation.js'
+import { auth, getAccessLevel } from '../middleware/authorisation.js'
 import { verifyResourceData } from '../middleware/data-verification.js'
 
 const router = express.Router()
@@ -7,8 +7,8 @@ const router = express.Router()
 /**
  * The endpoint at which a new resource can be added
  */
-router.post('/addResource', auth, verifyResourceData,(req, res, next) => {
-    const { title, type, uploaderID, fileRef, parentID, accessLevel } = req.body;
+router.post('/create', auth, verifyResourceData, async (req, res, next) => {
+    const { type, title, fileRef, parentID, accessLevel } = req.body;
 
     let currentDate = new Date();
 
@@ -20,11 +20,15 @@ router.post('/addResource', auth, verifyResourceData,(req, res, next) => {
         return;
     }
 
+    const currentUser = await req.db.from("user").select('user_id').where('email', req.email).first();
+    const uploaderID = currentUser.user_id;
+
+    
     req.db.from("resource").insert({
         resource_id: null,
-        title,
         type,
-        uploader_id: uploaderID,
+        title,
+        uploader_id: uploaderID, // TODO: Modify JWT call to include userID and add it to req.userID in the auth process.
         file_ref: fileRef,
         parent_id: parentID,
         access_level: accessLevel,
@@ -42,17 +46,32 @@ router.post('/addResource', auth, verifyResourceData,(req, res, next) => {
 /**
  * The endpoint at which a resource's information can be retrieved
  */
-router.get('/:resourceID', auth, (req, res, next) => {
-    const { resourceID } = req.params;
+router.get('/:resourceID', auth, getAccessLevel, (req, res, next) => {
+    const resourceID = Number.parseInt(req.params.resourceID, 10);
+    if (Number.isNaN(resourceID))
+    {
+        res.status(400).json({
+            error: true,
+            message: "Resource ID is invalid"
+        });
+        return;
+    }
+
     let fields = ['type', 'title', 'uploader_id', 'file_ref', 'parent_id', 'access_level', 'created']
 
-    req.db("resource")
+    let accessTo = req.accessTo;
+
+    req.db.from("resource")
     .select(fields)
     .where('resource_id', resourceID)
     .first() // There should only ever be one resource with a given resourceID
     .then(resource => {
         if (!resource) {
             res.status(404).json({ error: true, message: "Resource not found" });
+            return;
+        }
+        if (!accessTo.includes(resource.access_level)) {
+            res.status(403).json({ error: true, message: "User does not have access to view this resource"});
             return;
         }
 
