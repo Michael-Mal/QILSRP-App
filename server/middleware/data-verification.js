@@ -144,4 +144,56 @@ const verifyUserPasswordData = (req, res, next) => {
   next()
 }
 
-export { verifyUserLoginData, verifyUserData, verifyUserPasswordData }
+/**
+ * Validates the format of a resource title, enforcing character restrictions and other rules
+ */
+const verifyResourceTitle = (title) => {
+  if (title.length > 50) {
+    throw new Error("Resource title must not exceed 50 characters")
+  }
+
+  if (title.trim() === "") {
+    throw new Error("Resource title must not be empty")
+  }
+
+  if (/[<>:"/|\\?*]/.test(title)) {
+    throw new Error('Resource title contains invalid characters. Restricted characters: < > : " / | \\ ? *')
+  }
+}
+
+
+const verifyResourceData = (req, res, next) => {
+  const { title, type, uploaderID, fileRef, folderID, accessLevel } = req.body ?? {}
+
+  if (!title || !type || !uploaderID || !fileRef || !folderID || !accessLevel) {
+    res.status(400).json({
+      error: true,
+      message: "Request body incomplete, some required fields are missing. Required fields: title, type, uploaderID, fileRef, folderID, accessLevel"
+    })
+    return
+  }
+
+  try {
+    verifyResourceTitle(title)
+  }
+  catch (e) {
+    res.status(400).json({
+      error: true,
+      message: e.message
+    })
+    return
+  }
+
+
+  // Check if accessLevel is a valid value, currently must be one of the roles
+  if (!roles.includes(accessLevel)) {
+    res.status(400).json({
+      error: true,
+      message: "Access level must be one of 'student', 'ranger', or 'admin'"
+    })
+    return
+  }
+
+}
+
+export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyResourceData }
