@@ -163,7 +163,7 @@ export default class ResourcesView {
       folders.forEach(folder => {
         html_dynamic += `
         <div class="card">
-          <button data-action="goto-folder" data-id="${folder.id}">FOLDER: ${escapeHtml(folder.name)} | Access level: ${escapeHtml(folder.accessLevel)}</button>
+          <button data-action="goto-folder" data-id="${folder.id}">📁: ${escapeHtml(folder.name)} | Access level: ${escapeHtml(folder.accessLevel)}</button>
         </div>
       `;
     });
