@@ -1,17 +1,19 @@
 import { escapeHtml } from '../util/dom.js';
 
+const ROOT_ID = 1; // Assuming 1 is the root folder ID
+
 export default class ResourcesView {
   constructor(container, app) {
+    
     this.container = container;
     this.app = app;
-    this.currentFolderID = ROOTID;
+    this.currentFolderID = ROOT_ID;
   }
 
   async mount() {
     const user = this.app.auth.currentUser;
     const canAdd = !user.isStudent; // Flag for if the user should be allowed to add resources.
 
-    const ROOT_ID = 1; // Assuming 1 is the root folder ID
     let current_folder_id = ROOT_ID; // Temp set, later will be parameter for population method
 
     let html_static = '<h2>Resource Hub</h2>';
