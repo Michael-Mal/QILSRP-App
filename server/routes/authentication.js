@@ -17,7 +17,7 @@ const router = express.Router()
  */
 router.post('/login', verifyUserLoginData, (req, res, next) => {
   const { email, password } = req.body
-  let name, role, status
+  let name, role, status, cohort
 
   // Determine if user already exists in table
   req.db.from("user").select("*").where("email", "=", email)
@@ -30,6 +30,7 @@ router.post('/login', verifyUserLoginData, (req, res, next) => {
       name = users[0].name
       role = users[0].role
       status = users[0].status
+      cohort = users[0].cohort
       return argon2.verify(hash, password)
 
     })
@@ -49,14 +50,15 @@ router.post('/login', verifyUserLoginData, (req, res, next) => {
         // Return JWT
         const expiresIn = 86400
         const exp = Math.floor(Date.now() / 1000) + expiresIn
-        const token = jwt.sign({ exp, email, role }, process.env.JWT_SECRET)
+        const token = jwt.sign({ exp, email, role, cohort }, process.env.JWT_SECRET)
         res.json({
           token,
           tokenType: "Bearer",
           expiresIn,
           name,
           email: email,
-          role
+          role,
+          cohort
         })
 
       }

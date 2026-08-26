@@ -27,8 +27,11 @@ export default class CohortController {
   }
 
   async listForUser(user) {
+    if (!user.isAdmin) {
+      return [{ name: user.cohort }];
+    }
+
     const all = await this.list();
-    if (user.isStudent) return all.filter(cohort => cohort.hasMember(user.email));
     return all;
   }
 
