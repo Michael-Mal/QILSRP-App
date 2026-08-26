@@ -2,7 +2,6 @@ import Resource from '../model/Resource.js';
 
 export default class ResourceController {
   constructor(apiClient) {
-    this.folders = new LocalRepository('qilsrp.folders', FOLDER_SEED);
     this.api = apiClient;
   }
 
