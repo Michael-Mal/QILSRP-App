@@ -23,7 +23,10 @@ router.post('/login', verifyUserLoginData, (req, res, next) => {
   req.db.from("user").select("*").where("email", "=", email)
     .then(users => {
       if (users.length === 0) {
-        throw new Error("Incorrect email or password")
+        let e = Error("Incorrect email or password")
+        e.status = 401;
+        throw e
+
       }
       // If user does exist, verify if passwords match
       const hash = users[0].password_hash

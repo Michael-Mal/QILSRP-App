@@ -43,8 +43,13 @@ app.use('/conversation', conversationRouter, messageRouter)
 // Error handling
 app.use(function(err, req, res, next){
   res.status(err.status || 500).json({ error: true, message: err.message })
+
 });
 
+app.use((req, res, next) => {
+  res.status(404).send("Not found");
+
+});
 
 app.listen(port, () => {
   console.log(`Server listening on http://localhost:${port}`);
