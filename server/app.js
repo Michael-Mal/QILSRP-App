@@ -40,6 +40,12 @@ app.use('/user', authenticationRouter, userRouter)
 app.use('/cohort', cohortRouter)
 app.use('/conversation', conversationRouter, messageRouter)
 
+// Error handling
+app.use(function(err, req, res, next){
+  res.status(err.status || 500).json({ error: true, message: err.message })
+});
+
+
 app.listen(port, () => {
   console.log(`Server listening on http://localhost:${port}`);
 });

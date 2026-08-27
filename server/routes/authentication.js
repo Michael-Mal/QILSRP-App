@@ -41,8 +41,9 @@ router.post('/login', verifyUserLoginData, (req, res, next) => {
 
       } else {
         // If passwords do not match, return error response
-        throw new Error("Incorrect email or password")
-
+        let e = Error('Incorrect email or password');
+        e.status = 401;
+        throw e
       }
     })
     .then(status => {
@@ -63,30 +64,19 @@ router.post('/login', verifyUserLoginData, (req, res, next) => {
 
       }
       else if (status == "Pending") {
-        throw new Error("User has not yet been verified by an administrator")
+        let e = Error("User has not yet been verified by an administrator")
+        e.status = 403
+        throw e 
 
       }
       else {
-        throw new Error("User status is not active")
+        let e = Error("User status is not active")
+        e.status = 403
+        throw e
 
       }
     })
-    .catch(e => {
-      if (e.message == "Incorrect email or password") {
-        res.status(401).json({ error: true, message: e.message })
-
-      }
-      else if (e.message == "User has not yet been verified by an administrator"
-        || e.message == "User status is not active") {
-        res.status(403).json({ error: true, message: e.message })
-
-      }
-      else {
-        console.log(e.message)
-        res.status(500).json({ error: true })
-
-      }
-    })
+    .catch(e => next(e))
 })
 
 /**
@@ -111,7 +101,9 @@ router.put('/password', auth, verifyUserPasswordData, (req, res, next) => {
 
       } else {
         // If passwords do not match, return error response
-        throw new Error("Incorrect password")
+        let e = Error("Incorrect password")
+        e.status = 401
+        throw e
 
       }
     })
@@ -123,17 +115,7 @@ router.put('/password', auth, verifyUserPasswordData, (req, res, next) => {
       res.json({ message: "User password updated" })
 
     })
-    .catch(e => {
-      if (e.message == "Incorrect password") {
-        res.status(401).json({ error: true, message: e.message })
-
-      }
-      else {
-        console.log(e.message)
-        res.status(500).json({ error: true })
-
-      }
-    })
+    .catch(e => next(e))
 })
 
 export default router

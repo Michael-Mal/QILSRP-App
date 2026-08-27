@@ -6,8 +6,9 @@ import jwt from 'jsonwebtoken'
  */
 const auth = (req, res, next) => {
   if (!('authorization' in req.headers) || !req.headers.authorization.match(/^Bearer /)) {
-    res.status(401).json({ error: true, message: "Authorization header ('Bearer token') not found" })
-    return
+    let e = Error("Authorization header ('Bearer token') not found")
+    e.status = 401
+    throw e
 
   }
   const token = req.headers.authorization.replace(/^Bearer /, "")
@@ -19,11 +20,15 @@ const auth = (req, res, next) => {
   }
   catch (e) {
     if (e.name === 'TokenExpiredError') {
-      res.status(401).json({ error: true, message: 'JWT token has expired' })
+      let e = Error('JWT token has expired')
+      e.status = 401
+      throw e
 
     }
     else {
-      res.status(401).json({ error: true, message: 'Invalid JWT token' })
+      let e = Error('Invalid JWT token')
+      e.status = 401
+      throw e
 
     }
     return
@@ -40,8 +45,9 @@ const auth = (req, res, next) => {
 const optionalAuth = (req, res, next) => {
   if ('authorization' in req.headers) {
     if (!req.headers.authorization.match(/^Bearer /)) {
-      res.status(401).json({ error: true, message: "Authorization header is malformed" })
-      return
+      let e = Error("Authorization header is malformed")
+      e.status = 401
+      throw e
 
     }
     const token = req.headers.authorization.replace(/^Bearer /, "")
@@ -55,12 +61,18 @@ const optionalAuth = (req, res, next) => {
     catch (e) {
       console.log(e.name)
       if (e.name === 'TokenExpiredError') {
-        res.status(401).json({ error: true, message: 'JWT token has expired' })
+        let e = Error('JWT token has expired')
+        e.status = 401
+        throw e
+
       } else {
-        res.status(401).json({ error: true, message: 'Invalid JWT token' })
+        let e = Error('Invalid JWT token')
+        e.status = 401
+        throw e
+
       }
       return
-      
+
     }
   }
 
@@ -73,8 +85,9 @@ const optionalAuth = (req, res, next) => {
  */
 const verifyAdmin = (req, res, next) => {
   if (req.role != 'admin') {
-    res.status(403).json({ error: true, message: "Current user is not authorised to perform this function" })
-    return
+    let e = Error("Current user is not authorised to perform this function")
+    e.status = 403
+    throw e
 
   }
 

@@ -22,7 +22,9 @@ router.post('/register', optionalAuth, verifyUserData, (req, res, next) => {
     .then(users => {
       if (users.length > 0) {
         // If user does exist, return error response
-        throw new Error("User already exists")
+        let e = Error("User already exists")
+        e.status = 409
+        throw e
 
       } else {
         // If user does not exist, insert into table
@@ -49,15 +51,7 @@ router.post('/register', optionalAuth, verifyUserData, (req, res, next) => {
       res.status(201).json({ message: "User created. If you are not an admin please wait to be verified." })
 
     })
-    .catch(e => {
-      if (e.message == "User already exists") {
-        res.status(409).json({ error: true, message: e.message })
-      }
-      else {
-        console.log(e.message)
-        res.status(500).json({ error: true })
-      }
-    })
+    .catch(e => next(e))
 })
 
 /**
@@ -72,24 +66,16 @@ router.put('/verify/:email', auth, verifyAdmin, (req, res, next) => {
     .then(result => {
 
       if (result != 1) {
-        throw new Error("User not found or is not pending verification")
+        let e = Error("User not found or is not pending verification")
+        e.status = 404
+        throw e
 
       }
 
       res.json({ message: `User with email ${req.params.email} has been verified` })
     
     })
-    .catch(e => {
-      if (e.message == "User not found or is not pending verification") {
-        res.status(404).json({ error: true, message: e.message })
-
-      }
-      else {
-        console.log(e.message)
-        res.status(500).json({ error: true })
-
-      }
-    })
+    .catch(e => next(e))
 })
 
 /**
@@ -143,10 +129,7 @@ router.get('/', auth, verifyAdmin, (req, res, next) => {
       res.json(cohort_members)
 
     })
-    .catch((e) => {
-      console.log(e.message)
-      res.status(500).json({ error: true })
-    })
+    .catch(e => next(e))
 })
 
 /**
@@ -161,11 +144,17 @@ router.put('/:email', auth, verifyUserData, (req, res, next) => {
     .where({ "email": req.params.email })
     .then(count => {
       if (count[0]['count(*)'] != 1) {
-        throw Error("User not found")
+        let e = Error("User not found")
+        e.status = 404
+        throw e
+
       }
 
       if (req.email != req.params.email && req.role != "admin") {
-        throw Error("Forbidden")
+        let e = Error("Forbidden")
+        e.status = 403
+        throw e
+
       }
 
       return req.db('user')
@@ -177,18 +166,7 @@ router.put('/:email', auth, verifyUserData, (req, res, next) => {
       res.json({ message: `User ${name} has been updated` })
 
     })
-    .catch((e) => {
-      if (e.message == "User not found") {
-        res.status(404).json({ error: true, message: e.message })
-      }
-      else if (e.message == "Forbidden") {
-        res.status(403).json({ error: true, message: e.message })
-      }
-      else {
-        console.log(e.message)
-        res.status(500).json({ error: true })
-      }
-    })
+    .catch(e => next(e))
 })
 
 /**
@@ -196,8 +174,10 @@ router.put('/:email', auth, verifyUserData, (req, res, next) => {
  */
 router.delete('/:email', auth, (req, res, next) => {
   if (req.email != req.params.email && req.role != "admin") {
-    res.status(403).json({ error: true, message: "Forbidden" })
-    return
+    let e = Error("Forbidden")
+    e.status = 403
+    throw e
+
   }
 
   req.db('user')
@@ -206,22 +186,16 @@ router.delete('/:email', auth, (req, res, next) => {
     .then(count => {
       // Check if such a user exists
       if (count != 1) {
-        throw Error("User not found")
+        let e = Error("User not found")
+        e.status = 404
+        throw e
+
       }
 
       res.json({ message: `User with email ${req.params.email} has been deleted` })
 
     })
-    .catch(e => {
-      if (e.message == "User not found") {
-        res.status(404).json({ error: true, message: e.message })
-      }
-      else {
-        console.log(e.message)
-        res.status(500).json({ error: true })
-      }
-
-    })
+    .catch(e => next(e))
 })
 
 export default router
