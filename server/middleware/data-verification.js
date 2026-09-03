@@ -128,4 +128,44 @@ const verifyUserPasswordData = (req, res, next) => {
   next()
 }
 
-export { verifyUserLoginData, verifyUserData, verifyUserPasswordData }
+/**
+ * Validates that the event in the body of the request is in the correct format
+ * @returns An error if any field is null or if the date is invalid
+ */
+const verifyEventData = (req, res, next) => {
+  const { name, datetime, location, description } = req.body ?? {}
+
+  if (!name || !datetime || !location || !description) {
+    let e = Error("Request body incomplete: name, datetime, location, and description are required.")
+    e.status = 400
+    throw e
+
+  }
+
+  // Determine if datetime is valid
+  const format = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/
+  const datetimeDate = new Date(Date.parse(datetime) + 36000000) // Local time
+  const datetimeTimestamp = datetimeDate.getTime()
+  try {
+    const invalidDatetime = datetimeDate.toISOString() != datetime.slice(0, 10) + "T" + datetime.slice(11, 17) + ":00.000Z" // This in itself can also throw an error
+    if (!datetime.match(format) || isNaN(datetimeTimestamp) || invalidDatetime) { throw Error() }
+
+  }
+  catch (e) {
+    e = Error("Invalid input: datetime must be a real time in format YYYY-MM-DD HH:MM.")
+    e.status = 400
+    throw e
+
+  }
+
+  if (datetimeTimestamp < Date.now() + 36000000) {
+    let e = Error("Invalid input: datetime must be a time in the future.")
+    e.status = 400
+    throw e
+
+  }
+
+  next()
+}
+
+export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyEventData }

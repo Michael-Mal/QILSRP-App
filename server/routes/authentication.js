@@ -17,7 +17,7 @@ const router = express.Router()
  */
 router.post('/login', verifyUserLoginData, (req, res, next) => {
   const { email, password } = req.body
-  let name, role, status, cohort
+  let user_id, name, role, status, cohort 
 
   // Determine if user already exists in table
   req.db.from("user").select("*").where("email", "=", email)
@@ -30,6 +30,7 @@ router.post('/login', verifyUserLoginData, (req, res, next) => {
       }
       // If user does exist, verify if passwords match
       const hash = users[0].password_hash
+      user_id = users[0].user_id // Will refactor all of this once branches are merged
       name = users[0].name
       role = users[0].role
       status = users[0].status
@@ -54,11 +55,12 @@ router.post('/login', verifyUserLoginData, (req, res, next) => {
         // Return JWT
         const expiresIn = 86400
         const exp = Math.floor(Date.now() / 1000) + expiresIn
-        const token = jwt.sign({ exp, email, role, cohort }, process.env.JWT_SECRET)
+        const token = jwt.sign({ exp, user_id, email, role, cohort }, process.env.JWT_SECRET)
         res.json({
           token,
           tokenType: "Bearer",
           expiresIn,
+          user_id,
           name,
           email: email,
           role,

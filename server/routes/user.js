@@ -1,5 +1,5 @@
 import express from 'express'
-import { verifyUserData, verifyUserLoginData } from '../middleware/data-verification.js'
+import { verifyUserData } from '../middleware/data-verification.js'
 import argon2 from 'argon2'
 import { auth, optionalAuth, verifyAdmin } from '../middleware/authorisation.js'
 

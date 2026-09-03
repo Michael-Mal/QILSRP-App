@@ -14,8 +14,9 @@ const auth = (req, res, next) => {
   const token = req.headers.authorization.replace(/^Bearer /, "")
   try {
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET)
-    req.email = decodedToken.email;
-    req.role = decodedToken.role;
+    req.user_id = decodedToken.user_id // Will refactor all of this once branches are merged (:
+    req.email = decodedToken.email
+    req.role = decodedToken.role
 
   }
   catch (e) {

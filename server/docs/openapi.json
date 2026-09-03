@@ -1724,7 +1724,7 @@
                         "message": {
                           "type": "string",
                           "examples": [
-                            "Invalid input: datetime must be a real time in format YYYY-MM-DD HH:MM:SS."
+                            "Invalid input: datetime must be a real time in format YYYY-MM-DD HH:MM."
                           ]
                         }
                       }
@@ -2089,7 +2089,7 @@
                         "message": {
                           "type": "string",
                           "examples": [
-                            "Invalid input: datetime must be a real time in format YYYY-MM-DD HH:MM:SS."
+                            "Invalid input: datetime must be a real time in format YYYY-MM-DD HH:MM."
                           ]
                         }
                       }
