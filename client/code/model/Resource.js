@@ -1,4 +1,4 @@
-const SUPPORTED_TYPES = ['video', 'audio', 'image', 'pdf']
+const SUPPORTED_TYPES = ['video', 'audio', 'image', 'pdf', 'document', 'spreadsheet', 'presentation'];
 
 const SUPPORTED_ACCESS_LEVELS = ['student', 'ranger', 'admin']
 
@@ -68,5 +68,17 @@ export default class Resource {
 
   get isPDF() {
     return this.isType('pdf');
+  }
+
+  get isDocument() {
+    return this.isType('document');
+  }
+
+  get isSpreadsheet() {
+    return this.isType('spreadsheet');
+  }
+  
+  get isPresentation() {
+    return this.isType('presentation');
   }
 }

@@ -206,8 +206,18 @@ const verifyResourceData = (req, res, next) => {
     return
   }
 
+  const types = ['video', 'audio', 'image', 'pdf', 'document', 'spreadsheet', 'presentation'];
+
+  if (!types.includes(type.toLowerCase())) {
+    res.status(400).json({
+      error: true,
+      message: "Resource type must be one of 'video', 'audio', 'image', 'pdf', 'document', 'spreadsheet' or 'presentation'"
+    })
+    return
+  }
+
   // Check if accessLevel is a valid value, currently must be one of the roles
-  if (!roles.includes(accessLevel)) {
+  if (!roles.includes(accessLevel.toLowerCase())) {
     res.status(400).json({
       error: true,
       message: "Access level must be one of 'student', 'ranger', or 'admin'"

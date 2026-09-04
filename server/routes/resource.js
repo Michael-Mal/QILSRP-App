@@ -10,6 +10,8 @@ const router = express.Router()
 router.post('/create', auth, verifyResourceData, async (req, res, next) => {
     const { type, title, fileRef, parentID, accessLevel } = req.body;
 
+
+
     let currentDate = new Date();
 
     if (req.role !== 'admin' && req.role !== 'ranger') {
@@ -26,12 +28,12 @@ router.post('/create', auth, verifyResourceData, async (req, res, next) => {
     
     req.db.from("resource").insert({
         resource_id: null,
-        type,
+        type: type.toLowerCase(), // Ensure type is stored in lowercase for consistency
         title,
         uploader_id: uploaderID, // TODO: Modify JWT call to include userID and add it to req.userID in the auth process.
         file_ref: fileRef,
         parent_id: parentID,
-        access_level: accessLevel,
+        access_level: accessLevel.toLowerCase(), // Ensure access level is stored in lowercase for consistency
         created: currentDate.toISOString().slice(0, 19).replace('T', ' '), // Convert time to MySQL DATETIME format
     })
     .then(() => {

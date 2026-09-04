@@ -32,6 +32,9 @@ export default class ResourcesView {
               <option>PDF</option>
               <option>Audio</option>
               <option>Video</option>
+              <option>Document</option>
+              <option>Spreadsheet</option>
+              <option>Presentation</option>
             </select>
 
             <div id="res-input-container">
@@ -97,25 +100,23 @@ export default class ResourcesView {
       resourceForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const title = this.container.querySelector('#res-title').value;
-        const type = this.container.querySelector('#res-type').value;
+        const type = this.container.querySelector('#res-type').value.toLowerCase();
         const parentID = this.currentFolderID;
         let fileRef = null; // Placeholder for file reference after upload.
         const accessLevel = this.container.querySelector('#res-access').value.toLowerCase();
 
-        if (type === 'Image' || type === 'PDF' || type === 'Audio' || type === 'Video') {
-          const fileInput = this.container.querySelector('#res-file');
-          if (fileInput.files.length > 1) {
-            alert("multiple files are not supported yet. Please select only one file.");
-            return;
-            for (const file of fileInput.files) {
-            // Handle file upload logic here. Unsure how to handle multiple files in one resource.
-            }
-          } else {
-            const file = fileInput.files[0];
-            // TODO: 
-            // Handle single file upload logic here. Probably await file upload completion? Should maybe be done *before* form submission.
-            fileRef = 'qilsrp.com/dummy-file-url'; // Placeholder for file reference after upload.
+        const fileInput = this.container.querySelector('#res-file');
+        if (fileInput.files.length > 1) {
+          alert("multiple files are not supported yet. Please select only one file.");
+          return;
+          for (const file of fileInput.files) {
+          // Handle file upload logic here. Unsure how to handle multiple files in one resource.
           }
+        } else {
+          const file = fileInput.files[0];
+          // TODO: 
+          // Handle single file upload logic here. Probably await file upload completion? Should maybe be done *before* form submission.
+          fileRef = 'qilsrp.com/dummy-file-url'; // Placeholder for file reference after upload.
         }
         this.CreateNewResource({ title, type, fileRef, parentID, accessLevel });
       });
@@ -194,6 +195,7 @@ updateResourceInput(type) {
       const resContainer = this.container.querySelector('#res-input-container');
 
       switch (type) {
+        // NOTE: accept:* enforcements are assists for the file picker, but do not prevent users from selecting other file types. Validation should be implemented further, both server-side and client-side.
       case 'Image':
           resContainer.innerHTML = `
           <label>Image File:</label>
@@ -220,6 +222,27 @@ updateResourceInput(type) {
           <label>Video File:</label>
           <input type="file" id="res-file" accept="video/*" name="file" required multiple/>
           `;
+          break;
+      case 'Document':
+          resContainer.innerHTML = `
+          <label>Document:</label>
+          <input type="file" id="res-file" accept=".doc,.docx,.txt,.odt,.rtf" name="file" required multiple/>
+          `;
+          // List of supported document file types: .doc, .docx, .txt, .odt, .rtf
+          break;
+      case 'Spreadsheet':
+          resContainer.innerHTML = `
+          <label>Spreadsheet:</label>
+          <input type="file" id="res-file" accept=".xls,.xlsx,.ods,.csv" name="file" required multiple/>
+          `;
+          // List of supported spreadsheet file types: .xls, .xlsx, .ods, .csv
+          break;
+      case 'Presentation':
+          resContainer.innerHTML = `
+          <label>Presentation:</label>
+          <input type="file" id="res-file" accept=".ppt,.pptx,.odp,.key" name="file" required multiple/>
+          `;
+          // List of supported presentation file types: .ppt, .pptx, .odp, .key
           break;
       }
   }
