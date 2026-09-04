@@ -1842,6 +1842,26 @@
             "bearerAuth": []
           }
         ],
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "description": "If this parameter is present, only events in this year will be returned",
+            "required": false,
+            "schema": {
+              "type": "int"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "description": "If this parameter is present, only events in this month will be returned. Must also include year.",
+            "required": false,
+            "schema": {
+              "type": "int"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "An array of the user's event details",
@@ -1852,6 +1872,12 @@
                   "items": {
                     "type": "object",
                     "properties": {
+                      "event_id": {
+                        "type": "int",
+                        "examples": [
+                          15
+                        ]
+                      },
                       "user": {
                         "type": "string",
                         "examples": [
@@ -1888,6 +1914,30 @@
                           "true"
                         ]
                       }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Likely an invalid year/month value. Please contact the devs if this is incorrect."
+                      ]
                     }
                   }
                 }

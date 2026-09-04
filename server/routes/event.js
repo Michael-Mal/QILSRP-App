@@ -36,26 +36,119 @@ router.post('/', auth, verifyEventData, (req, res, next) => {
     .catch(e => next(e))
 })
 
+/**
+ * The endpoint at which users can retrieve their event info
+ */
+router.get('/', auth, (req, res, next) => {
+  let eventIds = []
+  let eventConfirmation = []
+  let eventCreatorIds = []
+
+  req.db("event_member")
+    .select(['event_id', 'confirmed'])
+    .where('user_id', req.user_id)
+    .then(dbRes => {
+      // Initialise event ids and event confirmation variables for later
+      for (let i = 0; i < dbRes.length; i++) {
+        eventIds[i] = dbRes[i].event_id
+      }
+      eventConfirmation = dbRes
+
+      return req.db('event')
+        .select("*")
+        .whereIn('event_id', eventIds)
+
+        // Year/month filtering
+        .andWhere(function () {
+          if (req.query.year != undefined) {
+            if (req.query.month != undefined) {
+              this.where('datetime', '>=', req.query.year + "-" + req.query.month + "-01")
+
+            }
+            else {
+              // Just the year
+              this.where('datetime', '>=', req.query.year + "-01-01")
+
+            }
+          }
+
+        })
+        .andWhere(function () {
+          // Maximums
+          if (req.query.year != undefined) {
+            if (req.query.month != undefined) {
+              let year = parseInt(req.query.year)
+              let nextMonth = parseInt(req.query.month) + 1
+              // Check for overflow
+              if (nextMonth == 13) {
+                year++
+                nextMonth = 1
+              }
+              this.where('datetime', '<', year.toString() + "-" + nextMonth.toString() + "-01")
+
+            }
+            else {
+              this.where('datetime', '<', (parseInt(req.query.year) + 1).toString() + "-01-01")
+
+            }
+          }
+        })
+    })
+    .then(events => {
+      for (let i = 0; i < events.length; i++) {
+        // Convert to local timezone by adding 10 hours
+        const localDatetime = new Date(Date.parse(events[i].datetime) + 36000000).toISOString()
+        events[i].datetime = localDatetime.slice(0, 10) + " " + localDatetime.slice(11, 16)
+
+        // Add confirmed data
+        for (let j = 0; j < eventConfirmation.length; j++) {
+          if (events[i].event_id == eventConfirmation[j].event_id) {
+            events[i].confirmed = (eventConfirmation[j].confirmed == 1) ? true : false
+            break
+
+          }
+        }
+
+        // Get user ids
+        eventCreatorIds[i] = events[i].user_id
+      }
+
+      // Add event creator names
+      req.db('user')
+        .select('user_id', 'name')
+        .whereIn('user_id', eventCreatorIds)
+        .then(creators => {
+          for (let i = 0; i < events.length; i++) {
+            for (let j = 0; j < creators.length; j++) {
+              if (events[i].user_id == creators[j].user_id) {
+                events[i].user = creators[j].name
+                delete events[i].user_id
+                break
+
+              }
+            }
+          }
+          res.json(events)
+
+        })
+    })
+    .catch(e => {
+      if (e.sqlMessage.startsWith("Incorrect DATETIME value: ")) {
+        console.log(e.sqlMessage)
+        e.message = "Likely an invalid year/month value. Please contact the devs if this is incorrect."
+        e.status = 400
+      }
+      next(e)
+    })
+
+})
+
 /**------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! --------------------
 ---------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! --------------------
 ---------------- None of the below have been tested yet --------------------
 ---------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! --------------------
 ---------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ------------------*/
 
-// /**
-//  * The endpoint at which users can retrieve their event info
-//  */
-// router.get('/', auth, (req, res, next) => {
-//   let fields = ['name', 'datetime', 'location', 'description']
-
-//   req.db('event')
-//     .select(fields)
-//     .then(events => {
-//       res.json(events)
-
-//     })
-//     .catch(e => next(e))
-// })
 
 // /**
 //  * The endpoint at which the user or an admin can edit the event's details
