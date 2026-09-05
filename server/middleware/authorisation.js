@@ -17,6 +17,7 @@ const auth = (req, res, next) => {
     req.user_id = decodedToken.user_id // Will refactor all of this once branches are merged (:
     req.email = decodedToken.email
     req.role = decodedToken.role
+    req.cohort = decodedToken.cohort
 
   }
   catch (e) {
@@ -55,8 +56,10 @@ const optionalAuth = (req, res, next) => {
 
     try {
       const decodedToken = jwt.verify(token, process.env.JWT_SECRET)
+      req.user_id = decodedToken.user_id;
       req.email = decodedToken.email;
       req.role = decodedToken.role;
+      req.cohort = decodedToken.cohort;
 
     }
     catch (e) {
