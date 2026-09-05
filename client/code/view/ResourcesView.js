@@ -24,7 +24,7 @@ export default class ResourcesView {
           <h2>Add a resource</h2>
           <br>
           <form id="res-form">
-            <label>Title</label><input type="text" id="res-title" name="title" required/>
+            <label>Title</label><input type="text" id="res-title" name="title" placeholder="Leave blank to use file name"/>
             <label>Type</label>
             <select id="res-type" name="type" required>
               <option value="">Select a type</option>
@@ -99,26 +99,22 @@ export default class ResourcesView {
       const resourceForm = this.container.querySelector('#res-form');
       resourceForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const title = this.container.querySelector('#res-title').value;
+        const file = this.container.querySelector('#res-file').files[0];
+        const mimeType = file.type; // Get the MIME type of the selected file
+
+        let title = this.container.querySelector('#res-title').value.trim();
+        if (title === '') {
+          // If title is empty, use the file name (without extension) as the title.
+          title = file.name.replace(/\.[^/.]+$/, ""); // Remove the extension from the file name, works with files with multiple dots in the name as well;
+        }
         const type = this.container.querySelector('#res-type').value.toLowerCase();
         const parentID = this.currentFolderID;
-        let fileRef = null; // Placeholder for file reference after upload.
         const accessLevel = this.container.querySelector('#res-access').value.toLowerCase();
 
-        const fileInput = this.container.querySelector('#res-file');
-        if (fileInput.files.length > 1) {
-          alert("multiple files are not supported yet. Please select only one file.");
-          return;
-          for (const file of fileInput.files) {
-          // Handle file upload logic here. Unsure how to handle multiple files in one resource.
-          }
-        } else {
-          const file = fileInput.files[0];
-          // TODO: 
-          // Handle single file upload logic here. Probably await file upload completion? Should maybe be done *before* form submission.
-          fileRef = 'qilsrp.com/dummy-file-url'; // Placeholder for file reference after upload.
-        }
-        this.CreateNewResource({ title, type, fileRef, parentID, accessLevel });
+
+        const extension = file.name.split('.').pop(); // Get the file extension from the selected file
+
+        this.CreateNewResource({ title, type, extension, mimeType, parentID, accessLevel, file });
       });
 
       const folderForm = this.container.querySelector('#folder-form');
@@ -199,57 +195,64 @@ updateResourceInput(type) {
       case 'Image':
           resContainer.innerHTML = `
           <label>Image File:</label>
-          <input type="file" id="res-file" accept="image/*" name="file" required multiple/> <!-- * Accepts any type of image (png, jpg, etc.) -->
+          <input type="file" id="res-file" accept="image/*" name="file" required/> <!-- * Accepts any type of image (png, jpg, etc.) -->
           `;
           break;
 
       case 'PDF':
           resContainer.innerHTML = `
           <label>PDF File:</label>
-          <input type="file" id="res-file" accept=".pdf" name="file" required multiple/>
+          <input type="file" id="res-file" accept=".pdf" name="file" required/>
           `;
           break;
 
       case 'Audio':
           resContainer.innerHTML = `
           <label>Audio File:</label>
-          <input type="file" id="res-file" accept="audio/*" name="file" required multiple/>
+          <input type="file" id="res-file" accept="audio/*" name="file" required/>
           `;
            break;
 
       case 'Video':
           resContainer.innerHTML = `
           <label>Video File:</label>
-          <input type="file" id="res-file" accept="video/*" name="file" required multiple/>
+          <input type="file" id="res-file" accept="video/*" name="file" required/>
           `;
           break;
       case 'Document':
           resContainer.innerHTML = `
           <label>Document:</label>
-          <input type="file" id="res-file" accept=".doc,.docx,.txt,.odt,.rtf" name="file" required multiple/>
+          <input type="file" id="res-file" accept=".doc,.docx,.txt,.odt,.rtf" name="file" required/>
           `;
           // List of supported document file types: .doc, .docx, .txt, .odt, .rtf
           break;
       case 'Spreadsheet':
           resContainer.innerHTML = `
           <label>Spreadsheet:</label>
-          <input type="file" id="res-file" accept=".xls,.xlsx,.ods,.csv" name="file" required multiple/>
+          <input type="file" id="res-file" accept=".xls,.xlsx,.ods,.csv" name="file" required/>
           `;
           // List of supported spreadsheet file types: .xls, .xlsx, .ods, .csv
           break;
       case 'Presentation':
           resContainer.innerHTML = `
           <label>Presentation:</label>
-          <input type="file" id="res-file" accept=".ppt,.pptx,.odp,.key" name="file" required multiple/>
+          <input type="file" id="res-file" accept=".ppt,.pptx,.odp,.key" name="file" required/>
           `;
           // List of supported presentation file types: .ppt, .pptx, .odp, .key
           break;
       }
   }
 
-  CreateNewResource({ type, title, fileRef, parentID, accessLevel }) {
-    this.app.resources.createResource({type, title, fileRef, parentID, accessLevel});
-    this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form
+  async CreateNewResource({ type, title, extension, mimeType, parentID, accessLevel, file}) {
+    try {
+      await this.app.resources.createResource({type, title, extension, mimeType, parentID, accessLevel, file});
+      
+      this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form
+    }
+    catch (e) {
+      console.error("Error creating resource:", e);
+      alert("The resource could not be uploaded, please try again. If the error persists, please contact a system administrator.");
+    }
   }
 
   CreateNewFolder({ name, parentID, accessLevel }) {

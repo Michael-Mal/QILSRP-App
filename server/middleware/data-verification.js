@@ -185,12 +185,12 @@ const verifyFolderName = (name) => {
  * @returns 
  */
 const verifyResourceData = (req, res, next) => {
-  const { title, type, fileRef, parentID, accessLevel } = req.body ?? {}
+  const { title, type, extension, mimeType, parentID, accessLevel } = req.body ?? {}
 
-  if (!title || !type || !fileRef || !parentID || !accessLevel) {
+  if (!title || !type || !extension || !mimeType || !parentID || !accessLevel) {
     res.status(400).json({
       error: true,
-      message: "Request body incomplete, some required fields are missing. Required fields: title, type, fileRef, folderID, accessLevel"
+      message: "Request body incomplete, some required fields are missing. Required fields: title, type, extension, mimeType, parentID, accessLevel"
     })
     return
   }
@@ -224,6 +224,8 @@ const verifyResourceData = (req, res, next) => {
     })
     return
   }
+
+  // TODO: Check mimeType and extension match the type of resource being uploaded
 
   next()
 }
