@@ -16,6 +16,27 @@ export default class ResourceController {
     return new Resource(resource)
   }
 
+  async downloadResource(resourceID) {
+    try {
+      const response = await this.api.get(`/resource/${resourceID}/download`, { auth: true });
+      const downloadURL = response.downloadURL;
+      
+      const downloadResponse = await fetch(downloadURL, {
+        method: 'GET'
+      });
+
+      window.open(downloadURL, '_blank'); // Open the download URL in a new tab to trigger the download without navigating away from the current page
+
+      if (!downloadResponse.ok) {
+        throw new Error(`Failed to download resource from S3 (${downloadResponse.status})`);
+      }
+    }
+    catch (e) {
+      console.error("Error downloading resource:", e);
+      throw e;
+    }
+  }
+
   /**
    * Creates a new Resource in the database and returns a presigned URL for uploading the resource file to S3. The file must be uploaded to the returned URL before the resource can be used.
    * @param {*} param0 - Object contiaing relevant Resource Info
@@ -32,7 +53,7 @@ export default class ResourceController {
         headers: {
           'Content-Type': mimeType
         },
-        body: file, // Upload the selected file to S3 using the presigned URL
+        body: file // Upload the selected file to S3 using the presigned URL
       });
 
       if (!uploadResponse.ok) {
@@ -51,7 +72,8 @@ export default class ResourceController {
         throw new Error('Failed to upload file to S3');
       }
 
-      await this.app.resources.completeResource(resourceID);
+      console.log(`File uploaded successfully to S3 for resource ID: ${resourceID}`);
+      await this.completeResource(resourceID);
       this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form
     }
     catch (e) {

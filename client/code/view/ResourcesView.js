@@ -170,6 +170,7 @@ export default class ResourcesView {
         <div class="card">
           <h3>${escapeHtml(resource.title)}</h3>
           <p>${escapeHtml(resource.type)}</p>
+          <button data-action="download-resource" data-id="${resource.id}">Download</button> | Access level: ${escapeHtml(resource.accessLevel)}</p>
         </div>
       `;
     })
@@ -183,6 +184,13 @@ export default class ResourcesView {
       const folderID = parseInt(event.target.getAttribute('data-id'), 10);
       this.populateFolderContents(folderID); // Recursively populate the clicked folder's contents
     });  
+  });
+
+  this.container.querySelectorAll('[data-action="download-resource"]').forEach(button => {
+    button.addEventListener('click', async (event) => {
+      const resourceID = parseInt(event.target.getAttribute('data-id'), 10);
+      this.downloadResource(resourceID);
+    });
   });
 }
 
@@ -258,5 +266,15 @@ updateResourceInput(type) {
   CreateNewFolder({ name, parentID, accessLevel }) {
     this.app.folders.createFolder({ name, parentID, accessLevel })
     this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form
+  }
+
+  async downloadResource(resourceID) {
+    try {
+      await this.app.resources.downloadResource(resourceID);
+    }
+    catch (e) {
+      console.error("Error downloading resource:", e);
+      alert("The resource could not be downloaded, please try again. If the error persists, please contact a system administrator.");
+    }
   }
 }

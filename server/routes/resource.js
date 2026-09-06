@@ -1,7 +1,7 @@
 import express from 'express'
 import { auth, getAccessLevel } from '../middleware/authorisation.js'
 import { verifyResourceData } from '../middleware/data-verification.js'
-import { generateUploadURL } from '../services/s3Service.js'
+import { generateUploadURL, generateDownloadURL } from '../services/s3Service.js'
 
 const router = express.Router()
 
@@ -42,7 +42,7 @@ router.post('/create', auth, verifyResourceData, async (req, res, next) => {
         // Generate presigned URL for file upload to S3 bucket
         const uploadURL = await generateUploadURL(`resource-hub/${resourceID}`, mimeType);
 
-        res.status(201).json({ message: "Resource metadata added successfully", resourceID: resourceID,uploadURL: uploadURL }) // Pass presigned URL back to the client for file upload
+        res.status(201).json({ message: "Resource metadata added successfully", resourceID: resourceID, uploadURL: uploadURL }) // Pass presigned URL back to the client for file upload
     }
     catch (e) {
         console.log(e.message)
@@ -121,5 +121,37 @@ router.get('/:resourceID', auth, getAccessLevel, (req, res, next) => {
       res.status(500).json({ error: true })
     })
 })
-    
+
+router.get('/:resourceID/download', auth, getAccessLevel, async (req, res, next) => {
+    const resourceID = Number.parseInt(req.params.resourceID, 10);
+    if (Number.isNaN(resourceID))
+    {
+        res.status(400).json({
+            error: true,
+            message: "Resource ID is invalid"
+        });
+        return;
+    }
+
+    // Retrieve resource information
+    try {
+        const resource = await req.db.from("resource").where('resource_id', resourceID).first();
+        if (!resource) {
+            res.status(404).json({ error: true, message: "Resource not found" });
+            return;
+        }
+        if (!req.accessTo.includes(resource.access_level)) {
+            res.status(403).json({ error: true, message: "User does not have access to download this resource"});
+            return;
+        }
+
+        // Generate presigned download URL
+        const downloadURL = await generateDownloadURL(`resource-hub/${resourceID}`, resource.title, resource.extension, resource.mime_type);
+        res.json({ downloadURL });
+    } catch (e) {
+        console.error("Error generating download URL:", e);
+        res.status(500).json({ error: true, message: "Failed to generate download URL" });
+    }
+});
+
 export default router
