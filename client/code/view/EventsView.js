@@ -70,6 +70,10 @@ export default class EventsView {
     this.container.querySelectorAll('[data-action="edit-event"]').forEach(button => {
       button.addEventListener('click', () => this.editEvent(button.dataset.id));
     });
+
+    this.container.querySelectorAll('[data-action="delete-event"]').forEach(button => {
+      button.addEventListener('click', () => this.deleteEvent(button.dataset.id));
+    });
   }
 
   async postEvent() {
@@ -117,6 +121,13 @@ export default class EventsView {
       alert(error.message || 'Creating a new event failed.')
 
     }
+
+  }
+
+  async deleteEvent(id) {
+    if (!confirm(`Delete event ${id}? This cannot be undone.`)) return;
+    await this.app.event.remove(id);
+    await this.mount();
 
   }
 }

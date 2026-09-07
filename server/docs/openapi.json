@@ -1546,7 +1546,7 @@
                         ]
                       },
                       "userCount": {
-                        "type": "int",
+                        "type": "integer",
                         "examples": [
                           15
                         ]
@@ -1849,7 +1849,7 @@
             "description": "If this parameter is present, only events in this year will be returned",
             "required": false,
             "schema": {
-              "type": "int"
+              "type": "integer"
             }
           },
           {
@@ -1858,7 +1858,7 @@
             "description": "If this parameter is present, only events in this month will be returned. Must also include year.",
             "required": false,
             "schema": {
-              "type": "int"
+              "type": "integer"
             }
           }
         ],
@@ -1873,13 +1873,13 @@
                     "type": "object",
                     "properties": {
                       "event_id": {
-                        "type": "int",
+                        "type": "integer",
                         "examples": [
                           15
                         ]
                       },
                       "user_id": {
-                        "type": "int",
+                        "type": "integer",
                         "examples": [
                           25
                         ]
@@ -2294,7 +2294,7 @@
             "description": "The id of the event",
             "required": true,
             "schema": {
-              "type": "int"
+              "type": "integer"
             }
           }
         ],
@@ -2310,30 +2310,6 @@
                       "type": "string",
                       "examples": [
                         "Event with ID 1 has been deleted"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Logged-in user does not match the user whose event you are attempting to modify",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "boolean",
-                      "examples": [
-                        true
-                      ]
-                    },
-                    "message": {
-                      "type": "string",
-                      "examples": [
-                        "Forbidden"
                       ]
                     }
                   }
@@ -2465,7 +2441,7 @@
             "description": "The id of the event",
             "required": true,
             "schema": {
-              "type": "int"
+              "type": "integer"
             }
           }
         ],
@@ -2477,7 +2453,7 @@
               "schema": {
                 "type": "array",
                 "items": {
-                  "type": "int",
+                  "type": "integer",
                   "examples": [
                     1
                   ]
@@ -2596,7 +2572,7 @@
             "description": "The id of the event",
             "required": true,
             "schema": {
-              "type": "int"
+              "type": "integer"
             }
           }
         ],
@@ -2762,7 +2738,7 @@
             "description": "The id of the event",
             "required": true,
             "schema": {
-              "type": "int"
+              "type": "integer"
             }
           }
         ],
@@ -2774,7 +2750,7 @@
               "schema": {
                 "type": "array",
                 "items": {
-                  "type": "int",
+                  "type": "integer",
                   "examples": [
                     1
                   ]

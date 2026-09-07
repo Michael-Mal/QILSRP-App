@@ -166,46 +166,44 @@ router.put('/:id', auth, verifyEventData, (req, res, next) => {
     .catch(e => next(e))
 })
 
+/**
+ * The endpoint at which the user can delete the event
+ */
+router.delete('/:id', auth, (req, res, next) => {
+  req.db("event")
+    .where({ event_id: req.params.id, user_id: req.user_id })
+    .then(event => {
+      // Check if such an event exists
+      if (event.length != 1) {
+        let e = Error("Event not found")
+        e.status = 404
+        throw e
+
+      }
+      // Remove references to event
+      return req.db('event_member')
+        .where("event_id", req.params.id)
+        .del()
+
+    })
+    .then(() => {
+      return req.db('event')
+        .where("event_id", req.params.id)
+        .del()
+
+    })
+    .then(() => {
+      res.json({ message: `Event with ID ${req.params.id} has been deleted` })
+
+    })
+    .catch(e => next(e))
+})
+
 /**------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! --------------------
 ---------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! --------------------
 ---------------- None of the below have been tested yet --------------------
 ---------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! --------------------
 ---------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ------------------*/
-
-// /**
-//  * The endpoint at which the user or an admin can delete the event
-//  */
-// router.delete('/:id', auth, (req, res, next) => {
-//   req.db.from("user")
-//     .select("user_id")
-//     .where("email", req.email)
-//     .then(user => {
-//       if (req.user_id != user[0].user_id && req.role != "admin") {
-//         let e = Error("Forbidden")
-//         e.status = 403
-//         throw e
-
-//       }
-
-//       return req.db('event')
-//         .where('email', req.params.email)
-//         .del()
-
-//     })
-//     .then(count => {
-//       // Check if such an event exists
-//       if (count != 1) {
-//         let e = Error("Event not found")
-//         e.status = 404
-//         throw e
-
-//       }
-
-//       res.json({ message: `Event with email ${req.params.email} has been deleted` })
-
-//     })
-//     .catch(e => next(e))
-// })
 
 // /**
 //  * The endpoint at which a pending event can be confirmed by the invited user
