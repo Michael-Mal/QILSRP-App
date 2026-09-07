@@ -1,13 +1,13 @@
 import express from 'express'
 import { verifyEventData } from '../middleware/data-verification.js'
-import { auth, optionalAuth } from '../middleware/authorisation.js'
+import { auth, optionalAuth, verifyAdmin } from '../middleware/authorisation.js'
 
 const router = express.Router()
 
 /**
  * The endpoint at which a new event can be posted
  */
-router.post('/', auth, verifyEventData, (req, res, next) => {
+router.post('/', auth, verifyAdmin, verifyEventData, (req, res, next) => {
   const { name, datetime, location, description } = req.body
   let eventId
   req.db.from("event")
@@ -40,15 +40,14 @@ router.post('/', auth, verifyEventData, (req, res, next) => {
  * The endpoint at which users can retrieve their event info
  */
 router.get('/', auth, (req, res, next) => {
-  let eventIds = []
   let eventConfirmation = []
-  let eventCreatorIds = []
 
   req.db("event_member")
     .select(['event_id', 'confirmed'])
     .where('user_id', req.user_id)
     .then(dbRes => {
       // Initialise event ids and event confirmation variables for later
+      let eventIds = []
       for (let i = 0; i < dbRes.length; i++) {
         eventIds[i] = dbRes[i].event_id
       }
@@ -95,6 +94,7 @@ router.get('/', auth, (req, res, next) => {
         })
     })
     .then(events => {
+      let eventCreatorIds = []
       for (let i = 0; i < events.length; i++) {
         // Convert to local timezone by adding 10 hours
         const localDatetime = new Date(Date.parse(events[i].datetime) + 36000000).toISOString()
@@ -122,7 +122,6 @@ router.get('/', auth, (req, res, next) => {
             for (let j = 0; j < creators.length; j++) {
               if (events[i].user_id == creators[j].user_id) {
                 events[i].user = creators[j].name
-                delete events[i].user_id
                 break
 
               }

@@ -1624,7 +1624,7 @@
     },
     "/event/": {
       "post": {
-        "description": "Creates a new event",
+        "description": "Allows an admin to create a new event",
         "tags": [
           "Event"
         ],
@@ -1876,6 +1876,12 @@
                         "type": "int",
                         "examples": [
                           15
+                        ]
+                      },
+                      "user_id": {
+                        "type": "int",
+                        "examples": [
+                          25
                         ]
                       },
                       "user": {

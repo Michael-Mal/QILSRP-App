@@ -12,6 +12,23 @@ export default class UserController {
     return this.api.post('/event/', { name, datetime, location, description }, { auth: true });
   }
 
+  async list(year, month) {
+    let searchParams = ''
+
+    if (year) {
+      searchParams += `?year=${year}`
+
+      if (month) {
+        searchParams += `&month=${month}`
+
+      }
+    }
+
+
+    const rows = await this.api.get('/event/' + searchParams, { auth: true });
+    return rows.map(row => new Event(row));
+  }
+
   async update(id, name, datetime, location, description) {
     return this.api.put(`/event/${encodeURIComponent(id)}`, { name, datetime, location, description }, { auth: true });
   }
