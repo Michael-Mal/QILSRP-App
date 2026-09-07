@@ -40,7 +40,7 @@ export default class EventsView {
           <thead><tr><th>Creator</th><th>Name</th><th>Date</th><th>Location</th><th>Description</th><th>Confirmed</th><th>Action</th></tr></thead>
           <tbody>
             ${events.map(event => `
-              <tr event-id="${escapeHtml(event.event_id)}">
+              <tr data-id="${escapeHtml(event.event_id)}">
               <td>${escapeHtml(event.user)}</td>
               <td>${escapeHtml(event.name)}</td>
               <td>${escapeHtml(event.datetime)}</td>
@@ -48,9 +48,9 @@ export default class EventsView {
               <td>${escapeHtml(event.description)}</td>
               <td>${escapeHtml(event.confirmed)}</td>
                 <td>
-                  ${event.user_id == user.user_id ? `<button data-action="edit-event" event-id="${escapeHtml(event.event_id)}">Edit</button>` : ""}
-                  ${event.user_id == user.user_id ? `<button data-action="delete-event" event-id="${escapeHtml(event.event_id)}">Delete</button>` : ""}
-                  ${!event.confirmed ? `<button data-action="confirm-user" data-email="${escapeHtml(event.email)}">Confirm</button>` : ""}
+                  ${event.user_id == user.user_id ? `<button data-action="edit-event" data-id="${escapeHtml(event.event_id)}">Edit</button>` : ""}
+                  ${event.user_id == user.user_id ? `<button data-action="delete-event" data-id="${escapeHtml(event.event_id)}">Delete</button>` : ""}
+                  ${!event.confirmed ? `<button data-action="confirm-user" data-id="${escapeHtml(event.event_id)}">Confirm</button>` : ""}
                 </td>
               </tr>
             `).join('')}
@@ -67,6 +67,9 @@ export default class EventsView {
     const filterBtn = this.container.querySelector('[data-action="filter"]');
     if (filterBtn) filterBtn.addEventListener('click', () => this.filterEvents());
 
+    this.container.querySelectorAll('[data-action="edit-event"]').forEach(button => {
+      button.addEventListener('click', () => this.editEvent(button.dataset.id));
+    });
   }
 
   async postEvent() {
@@ -93,5 +96,27 @@ export default class EventsView {
     this.yearFilter = this.container.querySelector('#filter-year').value.trim();
     this.monthFilter = this.container.querySelector('#filter-month').value.trim();
     await this.mount();
+  }
+
+  async editEvent(event_id) {
+    const name = prompt('New name for this event:');
+    if (!name) return;
+    const datetime = prompt('Updated date for this event in YYYY-MM-DD HH:MM format:');
+    if (!datetime) return;
+    const location = prompt('Updated location for this event:');
+    if (!location) return;
+    const description = prompt('Updated description for this event:');
+    if (!description) return;
+
+    try {
+      await this.app.event.update(event_id, { name, datetime, location, description });
+      await this.mount();
+      alert("Event successfully updated")
+
+    } catch (error) {
+      alert(error.message || 'Creating a new event failed.')
+
+    }
+
   }
 }

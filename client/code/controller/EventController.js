@@ -29,7 +29,7 @@ export default class UserController {
     return rows.map(row => new Event(row));
   }
 
-  async update(id, name, datetime, location, description) {
+  async update(id, { name, datetime, location, description }) {
     return this.api.put(`/event/${encodeURIComponent(id)}`, { name, datetime, location, description }, { auth: true });
   }
 

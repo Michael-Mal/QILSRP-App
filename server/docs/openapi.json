@@ -2047,10 +2047,10 @@
           {
             "name": "id",
             "in": "path",
-            "description": "The id of the event",
+            "description": "The id of the eventt",
             "required": true,
             "schema": {
-              "type": "int"
+              "type": "integer"
             }
           }
         ],
@@ -2065,13 +2065,13 @@
                   "name": {
                     "type": "string",
                     "examples": [
-                      "Melissa Stone"
+                      "Planned Burn"
                     ]
                   },
                   "datetime": {
                     "type": "string",
                     "examples": [
-                      "2030-01-01 11:00:00"
+                      "2030-01-01 11:00"
                     ]
                   },
                   "location": {
@@ -2251,8 +2251,8 @@
               }
             }
           },
-          "403": {
-            "description": "Logged-in user is not an admin or does not match the user whose event you are attempting to modify",
+          "404": {
+            "description": "No event was found containing this ID",
             "content": {
               "application/json": {
                 "schema": {
@@ -2267,7 +2267,7 @@
                     "message": {
                       "type": "string",
                       "examples": [
-                        "Forbidden"
+                        "Event not found"
                       ]
                     }
                   }
@@ -2318,7 +2318,7 @@
             }
           },
           "403": {
-            "description": "Logged-in user is not an admin or does not match the user whose event you are attempting to modify",
+            "description": "Logged-in user does not match the user whose event you are attempting to modify",
             "content": {
               "application/json": {
                 "schema": {
@@ -2530,7 +2530,7 @@
             }
           },
           "403": {
-            "description": "Logged-in user is not an admin or does not match the user whose event you are attempting to modify",
+            "description": "Logged-in user does not match the user whose event you are attempting to modify",
             "content": {
               "application/json": {
                 "schema": {
@@ -2882,7 +2882,7 @@
             }
           },
           "403": {
-            "description": "Logged-in user is not an admin or does not match the user whose event you are attempting to modify",
+            "description": "Logged-in user does not match the user whose event you are attempting to modify",
             "content": {
               "application/json": {
                 "schema": {
@@ -2950,7 +2950,7 @@
             "description": "The id of the event",
             "required": true,
             "schema": {
-              "type": "int"
+              "type": "integer"
             }
           }
         ],

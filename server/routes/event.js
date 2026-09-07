@@ -142,49 +142,35 @@ router.get('/', auth, (req, res, next) => {
 
 })
 
+/**
+ * The endpoint at which the user can edit the event's details
+ */
+router.put('/:id', auth, verifyEventData, (req, res, next) => {
+  const { name, datetime, location, description } = req.body
+
+  // Check if such a event exists
+  req.db('event')
+    .select('*')
+    .where({ event_id: req.params.id, user_id: req.user_id })
+    .update({ name, datetime, location, description })
+    .then(count => {
+      if (count != 1) {
+        let e = Error("Event not found")
+        e.status = 404
+        throw e
+
+      }
+      res.json({ message: `Event with ID ${req.params.id} has been updated` })
+
+    })
+    .catch(e => next(e))
+})
+
 /**------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! --------------------
 ---------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! --------------------
 ---------------- None of the below have been tested yet --------------------
 ---------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! --------------------
 ---------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ------------------*/
-
-
-// /**
-//  * The endpoint at which the user or an admin can edit the event's details
-//  */
-// router.put('/:id', auth, verifyEventData, (req, res, next) => {
-//   const { name, datetime, location, description } = req.body
-
-//   // Check if such a event exists
-//   req.db('event')
-//     .select('*')
-//     .where("event_id", req.params.id)
-//     .then(event => {
-//       if (event == []) {
-//         let e = Error("Event not found")
-//         e.status = 404
-//         throw e
-
-//       }
-
-//       if (req.user_id != event[0].user_id && req.role != "admin") {
-//         let e = Error("Forbidden")
-//         e.status = 403
-//         throw e
-
-//       }
-
-//       return req.db('event')
-//         .where("event_id", req.params.id)
-//         .update({ name, email, cohort, role })
-
-//     })
-//     .then(() => {
-//       res.json({ message: `Event with ID ${req.params.id} has been updated` })
-
-//     })
-//     .catch(e => next(e))
-// })
 
 // /**
 //  * The endpoint at which the user or an admin can delete the event
