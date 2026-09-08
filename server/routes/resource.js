@@ -14,7 +14,7 @@ router.post('/create', auth, verifyResourceData, getAccessLevel, async (req, res
 
     let currentDate = new Date();
 
-    if (req.accessTo.includes('ranger')) {
+    if (!req.accessTo.includes('ranger')) {
         res.status(403).json({
             error: true,
             message: "Current user is not authorised to add a resource. Only rangers and higher roles can add resources."
@@ -231,17 +231,6 @@ router.delete('/:resourceID/delete', auth, getAccessLevel, async (req, res, next
     }
 
     console.log('Attempting to delete resource with ID:', resourceID);
-
-    /*
-    const fields = ['access_level', 'uploader_id'];
-
-    const resource = await req.db.from("resource").select(fields).where('resource_id', resourceID).first();
-
-    if (!(resource.uploader_id === req.user_id) && !req.accessTo.includes('admin')) {
-        res.status(403).json({ error: true, message: "User does not have permission to delete this resource." });
-        return;
-    }
-    */
 
     try {
         // Check user has permission to delete resource, then delete from SQL table

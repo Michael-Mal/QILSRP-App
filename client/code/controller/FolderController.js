@@ -32,6 +32,26 @@ export default class FolderController {
         return new Folder(folder)
     }
 
+    /** 
+     * Gets all the children within a folder. TODO: Make this a backend route to avoid numerous API calls
+     */
+    async getAllFolderChildren(folderID) {        
+        let {folders, resources} = await this.api.get(`/folder/${folderID}/contents`, {auth: true});
+
+        let childFolders = folders.map(row => new Folder(row));
+        let childResources = resources.map(row => new Resource(row));
+
+        for (const folder of folders) 
+        {
+            const children = await this.getAllFolderChildren(folder.id)
+
+            childFolders = [...childFolders, ...children.childFolders];
+            childResources = [...childResources, ...children.childResources]
+        }
+                
+        return {childFolders, childResources}
+    }
+
     /**
      * Creates a new folder in the database
      * @param {string} name - Name of the folder
@@ -43,4 +63,15 @@ export default class FolderController {
     {
         return this.api.post(`/folder/create`, { name, parentID, accessLevel }, { auth: true });
     }
+
+    async editFolder(folderID, { name, accessLevel })
+    {
+        return this.api.put(`/folder/${folderID}/edit`, {name, accessLevel}, {auth: true});
+    }
+
+    async deleteFolder(folderID)
+    {
+        return this.api.delete(`/folder/${folderID}/delete`, {auth: true})
+    }
+    
 }

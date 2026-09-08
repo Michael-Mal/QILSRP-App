@@ -114,7 +114,7 @@ export default class ResourcesView {
 
         const extension = file.name.split('.').pop(); // Get the file extension from the selected file
 
-        this.CreateNewResource({ title, type, extension, mimeType, parentID, accessLevel, file });
+        this.createNewResource({ title, type, extension, mimeType, parentID, accessLevel, file });
       });
 
       const folderForm = this.container.querySelector('#folder-form');
@@ -125,7 +125,7 @@ export default class ResourcesView {
         const accessLevel = this.container.querySelector('#folder-access').value.toLowerCase();
 
 
-        this.CreateNewFolder({ name, parentID, accessLevel });
+        this.createNewFolder({ name, parentID, accessLevel });
       });
     }
       
@@ -160,7 +160,9 @@ export default class ResourcesView {
       folders.forEach(folder => {
         html_dynamic += `
         <div class="card">
-          <button data-action="goto-folder" data-id="${folder.id}">📁: ${escapeHtml(folder.name)} | Access level: ${escapeHtml(folder.accessLevel)}</button>
+          <button data-action="goto-folder" data-id="${folder.id}">📁: ${escapeHtml(folder.name)} | Access level: ${escapeHtml(folder.accessLevel)}</button> &emsp;
+          <button data-action="edit-folder" data-id="${folder.id}">Edit</button>
+          <button data-action="delete-folder" data-id="${folder.id}">Delete</button>
         </div>
       `;
     });
@@ -188,6 +190,20 @@ export default class ResourcesView {
     });  
   });
 
+  this.container.querySelectorAll('[data-action="edit-folder"]').forEach(button => {
+    button.addEventListener('click', async (event) => {
+      const folderID = parseInt(event.target.getAttribute('data-id'), 10)
+      this.editFolder(folderID)
+    })
+  })
+
+  this.container.querySelectorAll('[data-action="delete-folder"]').forEach(button => {
+    button.addEventListener('click', async (event) => {
+      const folderID = parseInt(event.target.getAttribute('data-id'), 10)
+      this.deleteFolder(folderID)
+    })
+  })
+
   this.container.querySelectorAll('[data-action="download-resource"]').forEach(button => {
     button.addEventListener('click', async (event) => {
       const resourceID = parseInt(event.target.getAttribute('data-id'), 10);
@@ -212,7 +228,7 @@ export default class ResourcesView {
   });
 }
 
-
+// Updates the file input of the resource when the resource type is changed
 updateResourceInput(type) {
       const resContainer = this.container.querySelector('#res-input-container');
 
@@ -269,21 +285,116 @@ updateResourceInput(type) {
       }
   }
 
-  async CreateNewResource({ type, title, extension, mimeType, parentID, accessLevel, file}) {
+  // ----------------------- Folder handling --------------------------------------------
+
+  async createNewFolder({ name, parentID, accessLevel }) {
+    this.app.folders.createFolder({ name, parentID, accessLevel })
+    this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form
+  }
+
+  async editFolder(folderID) {
+    if (!this.user.isAdmin) {
+      alert("You do not have permission to edit this folder. Only an admin can edit it.");
+      return;
+    }
+    
+    const newName = prompt("Enter the new name for the folder (leave blank to keep current name):");
+    const roles = ['student', 'ranger', 'admin', '']; // Include empty string to allow keeping current access level
+    let newAccessLevel = prompt("Enter the new access level for the folder (student, ranger, admin) or leave blank to keep current level:").toLowerCase();
+
+    while (!roles.includes(newAccessLevel)) {
+      newAccessLevel = prompt("Invalid access level. Please enter a valid access level (student, ranger, admin) or leave blank to keep current level:").toLowerCase();
+    }
+    try {
+      await this.app.folders.editFolder(folderID, { name: newName || undefined, accessLevel: newAccessLevel || undefined });
+      this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form
+    }
+    catch (e) {
+      console.error("Error editing folder:", e);
+      alert("The folder could not be edited, please try again. If the error persists, please contact a system administrator.");
+    }
+  }
+
+  // Very dangerous method to delete a folder. TODO: Add some safety to the recursive deletes.. somehow.
+  async deleteFolder(folderID) {
+    if (!this.user.isAdmin) {
+      alert("You do not have permission to edit this folder. Only an admin can edit it.");
+      return;
+    }
+
+
+    const {childFolders, childResources} = await this.app.folders.getAllFolderChildren(folderID);
+
+    const childFolderCount = childFolders.length;
+    const childResourceCount = childResources.length
+
+    const hasChildren = !(childFolderCount === 0 && childResourceCount === 0);
+
+    if (!hasChildren) // handling for if the folder has no children
+    {
+      const confirmDelete = confirm("Are you sure you want to delete this folder? This action cannot be undone.")
+
+      if (!confirmDelete) 
+      {
+        return; // User declined deletion
+      }
+      else {
+        try{
+          this.app.folders.deleteFolder(folderID);
+          this.populateFolderContents(this.currentFolderID);
+        }
+        catch (e) {
+          console.error("Error deleting folder:", e);
+          alert("The folder could not be deleted, please try again. If the error persists, please contact a system administrator.");
+        }
+      }
+    }
+    else {
+      const confirmDelete = confirm(`Are you sure you want to delete this folder?\n
+        WARNING: this will also delete:\n 
+        !! ${childFolderCount} sub-folders and \n
+        !! ${childResourceCount} resources within them.`)
+
+      if (!confirmDelete) 
+      {
+        return; // User declined deletion
+      }
+      else {
+        try{
+          for (const resource of childResources)
+          {
+            this.app.resources.deleteResource(resource.id);
+          }
+
+          for (const folder of childFolders)
+          {
+            this.app.folders.deleteFolder(folder.id);
+          }
+          this.app.folders.deleteFolder(folderID);
+
+          this.populateFolderContents(this.currentFolderID);
+        }
+        catch (e) {
+          console.error("Error deleting the folder or a child:", e);
+          alert("The folder could not be deleted. If the error persists, please contact a system administrator.");
+      }
+        
+      }
+    }
+  }
+
+  // ----------------------- Resource handling -------------------------------------------
+
+  async createNewResource({ type, title, extension, mimeType, parentID, accessLevel, file}) {
     try {
       await this.app.resources.createResource({type, title, extension, mimeType, parentID, accessLevel, file});
       
-      this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form
+      this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form. NOT WORKING TODO: Fix
     }
     catch (e) {
       console.error("Error creating resource:", e);
       alert("The resource could not be uploaded, please try again. If the error persists, please contact a system administrator.");
     }
-  }
-
-  CreateNewFolder({ name, parentID, accessLevel }) {
-    this.app.folders.createFolder({ name, parentID, accessLevel })
-    this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form
   }
 
   async downloadResource(resourceID) {
