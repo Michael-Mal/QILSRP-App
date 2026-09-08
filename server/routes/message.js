@@ -3,8 +3,6 @@ import { auth } from '../middleware/authorisation.js'
 
 const router = express.Router()
 
-const getUserId = (db, email) => db('user').select('user_id').where({ email }).first()
-
 const isMember = (db, conversationId, userId) => {
   return db('conversation_member')
     .count('* as count')
@@ -19,14 +17,9 @@ const isMember = (db, conversationId, userId) => {
  */
 router.get('/:conversationId/messages', auth, (req, res, next) => {
   const conversationId = req.params.conversationId
-  let userId
+  const userId = req.user_id
 
-  getUserId(req.db, req.email)
-    .then(user => {
-      if (!user) throw new Error('User not found')
-      userId = user.user_id
-      return isMember(req.db, conversationId, userId)
-    })
+  isMember(req.db, conversationId, userId)
     .then(member => {
       if (!member) throw new Error('Forbidden')
 
@@ -62,14 +55,9 @@ router.post('/:conversationId/messages', auth, (req, res, next) => {
     return
   }
 
-  let userId
+  const userId = req.user_id
 
-  getUserId(req.db, req.email)
-    .then(user => {
-      if (!user) throw new Error('User not found')
-      userId = user.user_id
-      return isMember(req.db, conversationId, userId)
-    })
+  isMember(req.db, conversationId, userId)
     .then(member => {
       if (!member) throw new Error('Forbidden')
 

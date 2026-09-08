@@ -15,10 +15,7 @@ router.get('/', auth, (req, res, next) => {
       res.json(cohorts)
 
     })
-    .catch((e) => {
-      console.log(e.message)
-      res.status(500).json({ error: true })
-    })
+    .catch(e => next(e))
 })
 
 export default router

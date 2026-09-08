@@ -10,6 +10,7 @@ import conversationRouter from './routes/conversation.js'
 import messageRouter from './routes/message.js'
 import resourceRouter from './routes/resource.js'
 import folderRouter from './routes/folder.js'
+import eventRouter from './routes/event.js'
 
 import morgan from 'morgan'
 import swaggerUI from 'swagger-ui-express'
@@ -43,6 +44,18 @@ app.use('/cohort', cohortRouter)
 app.use('/conversation', conversationRouter, messageRouter)
 app.use('/resource', resourceRouter)
 app.use('/folder', folderRouter)
+app.use('/event', eventRouter)
+
+// Error handling
+app.use(function(err, req, res, next){
+  res.status(err.status || 500).json({ error: true, message: err.message })
+
+});
+
+app.use((req, res, next) => {
+  res.status(404).send("Not found");
+
+});
 
 app.listen(port, () => {
   console.log(`Server listening on http://localhost:${port}`);

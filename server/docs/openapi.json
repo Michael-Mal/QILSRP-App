@@ -71,6 +71,36 @@
                       "examples": [
                         86400
                       ]
+                    },
+                    "user_id": {
+                      "type": "number",
+                      "examples": [
+                        "15"
+                      ]
+                    },
+                    "name": {
+                      "type": "string",
+                      "examples": [
+                        "Michelle Rivers"
+                      ]
+                    },
+                    "email": {
+                      "type": "string",
+                      "examples": [
+                        "mrivers@email.com"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "examples": [
+                        "ranger"
+                      ]
+                    },
+                    "cohort": {
+                      "type": "string",
+                      "examples": [
+                        "Brisbane Cohort"
+                      ]
                     }
                   }
                 }
@@ -678,22 +708,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                      "type": "object",
-                      "properties": {
-                        "error": {
-                          "type": "boolean",
-                          "examples": [
-                            true
-                          ]
-                        },
-                        "message": {
-                          "type": "string",
-                          "examples": [
-                            "Current user is not authorised to perform this function"
-                          ]
-                        }
-                      }
-                    
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Current user is not authorised to perform this function"
+                      ]
+                    }
+                  }
                 }
               }
             }
@@ -819,7 +848,7 @@
           {
             "name": "name",
             "in": "query",
-            "description": "If this parameter is present, only users with this name will be returned (case-sensitive).",
+            "description": "If this parameter is present, only users with this name will be returned (case-sensitive)",
             "required": false,
             "schema": {
               "type": "string"
@@ -828,7 +857,7 @@
           {
             "name": "email",
             "in": "query",
-            "description": "If this parameter is present, only users with this email will be returned.",
+            "description": "If this parameter is present, only users with this email will be returned",
             "required": false,
             "schema": {
               "type": "string"
@@ -837,7 +866,7 @@
           {
             "name": "status",
             "in": "query",
-            "description": "If this parameter is present, only users with this status will be returned.",
+            "description": "If this parameter is present, only users with this status will be returned (admin-only)",
             "required": false,
             "schema": {
               "type": "string",
@@ -850,7 +879,7 @@
           {
             "name": "cohort",
             "in": "query",
-            "description": "If this parameter is present, only users in the specified cohort will be returned.",
+            "description": "If this parameter is present, only users in the specified cohort will be returned (admin-only)",
             "required": false,
             "schema": {
               "type": "string"
@@ -859,7 +888,7 @@
           {
             "name": "role",
             "in": "query",
-            "description": "If this parameter is present, only users in the specified role will be returned.",
+            "description": "If this parameter is present, only users in the specified role will be returned",
             "required": false,
             "schema": {
               "type": "string",
@@ -873,7 +902,7 @@
         ],
         "responses": {
           "200": {
-            "description": "An array of objects containing name, email, status, date created, role, and cohort",
+            "description": "An array of objects containing user_id, name, email, status, date created, role, and cohort. If a non-privilidged user uses this endpoint, the status, date created, and cohort information will be omitted, and will only return verified users within that user's cohort.",
             "content": {
               "application/json": {
                 "schema": {
@@ -881,6 +910,12 @@
                   "items": {
                     "type": "object",
                     "properties": {
+                      "user_id": {
+                        "type": "number",
+                        "examples": [
+                          15
+                        ]
+                      },
                       "name": {
                         "type": "string",
                         "examples": [
@@ -981,30 +1016,6 @@
                       }
                     }
                   ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "boolean",
-                      "examples": [
-                        true
-                      ]
-                    },
-                    "message": {
-                      "type": "string",
-                      "examples": [
-                        "Current user is not authorised to perform this function"
-                      ]
-                    }
-                  }
                 }
               }
             }
@@ -1547,7 +1558,7 @@
                         ]
                       },
                       "userCount": {
-                        "type": "int",
+                        "type": "integer",
                         "examples": [
                           15
                         ]
@@ -1616,6 +1627,1463 @@
                       }
                     }
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/event/": {
+      "post": {
+        "description": "Allows an admin to create a new event",
+        "tags": [
+          "Event"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "The details of the event",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "examples": [
+                      "Melissa Stone"
+                    ]
+                  },
+                  "datetime": {
+                    "type": "string",
+                    "examples": [
+                      "2030-01-01 11:00:00"
+                    ]
+                  },
+                  "location": {
+                    "type": "string",
+                    "examples": [
+                      "Archer Point Site"
+                    ]
+                  },
+                  "description": {
+                    "type": "string",
+                    "examples": [
+                      "This planned burn will maintain the health of our bushland"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Event successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Event with ID 1 successfully created"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request. Click on 'Schema' to see the possible error responses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Request body incomplete: name, datetime, location, and description are required."
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Invalid input: datetime must be a real time in format YYYY-MM-DD HH:MM."
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Invalid input: datetime must be a time in the future."
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. Click on 'Schema' below to see the possible error responses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Authorization header ('Bearer token') not found"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "JWT token has expired"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Invalid JWT token"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Authorization header is malformed"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Returns all of the user's events, confirmed and pending",
+        "tags": [
+          "Event"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "description": "If this parameter is present, only events in this year will be returned",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "description": "If this parameter is present, only events in this month will be returned. Must also include year.",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An array of the user's event details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "event_id": {
+                        "type": "integer",
+                        "examples": [
+                          15
+                        ]
+                      },
+                      "user_id": {
+                        "type": "integer",
+                        "examples": [
+                          25
+                        ]
+                      },
+                      "user": {
+                        "type": "string",
+                        "examples": [
+                          "Melissa Stone"
+                        ]
+                      },
+                      "name": {
+                        "type": "string",
+                        "examples": [
+                          "Planned Burn"
+                        ]
+                      },
+                      "datetime": {
+                        "type": "string",
+                        "examples": [
+                          "2030-01-01 11:00:00"
+                        ]
+                      },
+                      "location": {
+                        "type": "string",
+                        "examples": [
+                          "Archer Point Site"
+                        ]
+                      },
+                      "description": {
+                        "type": "string",
+                        "examples": [
+                          "This planned burn will maintain the health of our bushland"
+                        ]
+                      },
+                      "confirmed": {
+                        "type": "boolean",
+                        "examples": [
+                          "true"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Likely an invalid year/month value. Please contact the devs if this is incorrect."
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. Click on 'Schema' below to see the possible error responses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Authorization header ('Bearer token') not found"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "JWT token has expired"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Invalid JWT token"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Authorization header is malformed"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/event/{id}": {
+      "put": {
+        "description": "Update an event",
+        "tags": [
+          "Event"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the eventt",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The updated details of the event",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "examples": [
+                      "Planned Burn"
+                    ]
+                  },
+                  "datetime": {
+                    "type": "string",
+                    "examples": [
+                      "2030-01-01 11:00"
+                    ]
+                  },
+                  "location": {
+                    "type": "string",
+                    "examples": [
+                      "Archer Point Site"
+                    ]
+                  },
+                  "description": {
+                    "type": "string",
+                    "examples": [
+                      "This planned burn will maintain the health of our bushland"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Event with ID 1 successfully updated"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request. Click on 'Schema' to see the possible error responses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Request body incomplete: name, datetime, location, and description are required."
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Invalid input: datetime must be a real time in format YYYY-MM-DD HH:MM."
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Invalid input: datetime must be a time in the future."
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. Click on 'Schema' below to see the possible error responses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Authorization header ('Bearer token') not found"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "JWT token has expired"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Invalid JWT token"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Authorization header is malformed"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No event was found containing this ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Event not found"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Deletes the event",
+        "tags": [
+          "Event"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the event",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data deleted successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Event with ID 1 has been deleted"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. Click on 'Schema' below to see the possible error responses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Authorization header ('Bearer token') not found"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "JWT token has expired"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Invalid JWT token"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Authorization header is malformed"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No event was found containing this ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Event not found"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/event/{id}/members": {
+      "post": {
+        "description": "Add an array of users to the event",
+        "tags": [
+          "Event"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the event",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "An array of user IDs",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "examples": [
+                    1
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Added members to the event successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Added members to the event successfully"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Request body incomplete: an array of user IDs is required."
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Logged-in user does not match the user whose event you are attempting to modify",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Forbidden"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No event was found containing this ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Event not found"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Returns all of the event's users, confirmed and pending",
+        "tags": [
+          "Event"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the event",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An array of the users' name, email, role, and invitation status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "examples": [
+                          "Michelle Rivers"
+                        ]
+                      },
+                      "email": {
+                        "type": "string",
+                        "examples": [
+                          "ranger0@email.com"
+                        ]
+                      },
+                      "role": {
+                        "type": "string",
+                        "examples": [
+                          "ranger"
+                        ]
+                      },
+                      "confirmed": {
+                        "type": "boolean",
+                        "examples": [
+                          "true"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. Click on 'Schema' below to see the possible error responses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Authorization header ('Bearer token') not found"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "JWT token has expired"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Invalid JWT token"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Authorization header is malformed"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No event was found containing this ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Event not found"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Removes an array of users from the event",
+        "tags": [
+          "Event"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the event",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "An array of user IDs",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "examples": [
+                    1
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Removed members from the event successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Removed members from the event successfully"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. Click on 'Schema' below to see the possible error responses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Authorization header ('Bearer token') not found"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "JWT token has expired"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Invalid JWT token"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Authorization header is malformed"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Logged-in user does not match the user whose event you are attempting to modify",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Forbidden"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No event was found containing this ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Event not found"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/event/{id}/confirm": {
+      "post": {
+        "description": "Confirm that the current user will be attending the event",
+        "tags": [
+          "Event"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the event",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event attendance confirmed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Event attendance confirmed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. Click on 'Schema' below to see the possible error responses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Authorization header ('Bearer token') not found"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "JWT token has expired"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Invalid JWT token"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Authorization header is malformed"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Logged-in user is not an admin or does not match the user whose event invitation you are attempting to modify",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Forbidden"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No event was found containing this ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "examples": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "Event not found"
+                      ]
+                    }
+                  }
                 }
               }
             }

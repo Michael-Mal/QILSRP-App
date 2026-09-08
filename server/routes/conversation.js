@@ -4,11 +4,6 @@ import { auth } from '../middleware/authorisation.js'
 const router = express.Router()
 
 /**
- * Looks up the user_id for the given email.
- */
-const getUserId = (db, email) => db('user').select('user_id').where({ email }).first()
-
-/**
  * Makes sure a cohort-type conversation exists for the given cohort name,
  * and that the given user is a member of it. There's no separate endpoint
  * that provisions cohort conversations - they're created the first time
@@ -40,15 +35,10 @@ const ensureCohortConversation = (db, cohortName, userId) => {
  * to.
  */
 router.get('/', auth, (req, res, next) => {
-  let userId
+  const userId = req.user_id
+  const cohortStep = req.cohort ? ensureCohortConversation(req.db, req.cohort, userId) : Promise.resolve()
 
-  getUserId(req.db, req.email)
-    .then(user => {
-      if (!user) throw new Error('User not found')
-      userId = user.user_id
-      return req.db('user').select('cohort').where({ user_id: userId }).first()
-    })
-    .then(({ cohort }) => cohort ? ensureCohortConversation(req.db, cohort, userId) : null)
+  cohortStep
     .then(() => {
       return req.db('conversation as c')
         .join('conversation_member as cm', 'cm.conversation_id', 'c.conversation_id')
@@ -110,15 +100,10 @@ router.post('/', auth, (req, res, next) => {
     return
   }
 
-  let creatorId
+  const creatorId = req.user_id
   let memberIds
 
-  getUserId(req.db, req.email)
-    .then(user => {
-      if (!user) throw new Error('User not found')
-      creatorId = user.user_id
-      return req.db('user').select('user_id').whereIn('email', memberEmails)
-    })
+  req.db('user').select('user_id').whereIn('email', memberEmails)
     .then(rows => {
       if (rows.length !== memberEmails.length) {
         throw new Error('One or more members were not found')

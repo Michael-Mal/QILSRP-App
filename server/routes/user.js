@@ -1,5 +1,5 @@
 import express from 'express'
-import { verifyUserData, verifyUserLoginData } from '../middleware/data-verification.js'
+import { verifyUserData } from '../middleware/data-verification.js'
 import argon2 from 'argon2'
 import { auth, optionalAuth, verifyAdmin } from '../middleware/authorisation.js'
 
@@ -22,7 +22,9 @@ router.post('/register', optionalAuth, verifyUserData, (req, res, next) => {
     .then(users => {
       if (users.length > 0) {
         // If user does exist, return error response
-        throw new Error("User already exists")
+        let e = Error("User already exists")
+        e.status = 409
+        throw e
 
       } else {
         // If user does not exist, insert into table
@@ -49,15 +51,7 @@ router.post('/register', optionalAuth, verifyUserData, (req, res, next) => {
       res.status(201).json({ message: "User created. If you are not an admin please wait to be verified." })
 
     })
-    .catch(e => {
-      if (e.message == "User already exists") {
-        res.status(409).json({ error: true, message: e.message })
-      }
-      else {
-        console.log(e.message)
-        res.status(500).json({ error: true })
-      }
-    })
+    .catch(e => next(e))
 })
 
 /**
@@ -72,31 +66,26 @@ router.put('/verify/:email', auth, verifyAdmin, (req, res, next) => {
     .then(result => {
 
       if (result != 1) {
-        throw new Error("User not found or is not pending verification")
+        let e = Error("User not found or is not pending verification")
+        e.status = 404
+        throw e
 
       }
 
       res.json({ message: `User with email ${req.params.email} has been verified` })
     
     })
-    .catch(e => {
-      if (e.message == "User not found or is not pending verification") {
-        res.status(404).json({ error: true, message: e.message })
-
-      }
-      else {
-        console.log(e.message)
-        res.status(500).json({ error: true })
-
-      }
-    })
+    .catch(e => next(e))
 })
 
 /**
- * The endpoint at which (an admin) can retrieve select user info
+ * The endpoint at which users can retrieve select user info
  */
-router.get('/', auth, verifyAdmin, (req, res, next) => {
-  let fields = ['name', 'email', 'status', 'created', 'role', 'cohort']
+router.get('/', auth, (req, res, next) => {
+  let fields = ['user_id', 'name', 'email', 'role']
+  if (req.role == "admin") {
+    fields = fields.concat(['status', 'created', 'cohort'])
+  }
 
   req.db('user')
     .select(fields)
@@ -115,14 +104,24 @@ router.get('/', auth, verifyAdmin, (req, res, next) => {
       }
     })
     .andWhere(function () {
-      if (req.query.status != undefined) {
+      if (req.query.status != undefined && req.role == "admin") {
         this.where('status', req.query.status)
+
+      }
+      else if (req.role != "admin") { 
+        // Return only verified users
+        this.where('status', "Active")
 
       }
     })
     .andWhere(function () {
-      if (req.query.cohort != undefined) {
+      if (req.query.cohort != undefined && req.role == "admin") {
         this.where('cohort', req.query.cohort)
+
+      }
+      else if (req.role != "admin") {
+        // Return only users within the user's cohort
+        this.where('cohort', req.cohort)
 
       }
     })
@@ -134,19 +133,18 @@ router.get('/', auth, verifyAdmin, (req, res, next) => {
     })
 
     .then(cohort_members => {
-      cohort_members.forEach(member => {
-        // Convert created time to local timezone by adding 10 hours
-        const createdLocal = new Date(Date.parse(member.created) + 72000000).toISOString()
-        member.created = createdLocal.slice(0, 10) + " " + createdLocal.slice(11, 19)
-      });
+      if (req.role == "admin") {
+        cohort_members.forEach(member => {
+          // Convert created time to local timezone by adding 10 hours
+          const createdLocal = new Date(Date.parse(member.created) + 72000000).toISOString()
+          member.created = createdLocal.slice(0, 10) + " " + createdLocal.slice(11, 19)
+        })
+      }
 
       res.json(cohort_members)
 
     })
-    .catch((e) => {
-      console.log(e.message)
-      res.status(500).json({ error: true })
-    })
+    //.catch(e => next(e))
 })
 
 /**
@@ -161,11 +159,17 @@ router.put('/:email', auth, verifyUserData, (req, res, next) => {
     .where({ "email": req.params.email })
     .then(count => {
       if (count[0]['count(*)'] != 1) {
-        throw Error("User not found")
+        let e = Error("User not found")
+        e.status = 404
+        throw e
+
       }
 
       if (req.email != req.params.email && req.role != "admin") {
-        throw Error("Forbidden")
+        let e = Error("Forbidden")
+        e.status = 403
+        throw e
+
       }
 
       return req.db('user')
@@ -177,18 +181,7 @@ router.put('/:email', auth, verifyUserData, (req, res, next) => {
       res.json({ message: `User ${name} has been updated` })
 
     })
-    .catch((e) => {
-      if (e.message == "User not found") {
-        res.status(404).json({ error: true, message: e.message })
-      }
-      else if (e.message == "Forbidden") {
-        res.status(403).json({ error: true, message: e.message })
-      }
-      else {
-        console.log(e.message)
-        res.status(500).json({ error: true })
-      }
-    })
+    .catch(e => next(e))
 })
 
 /**
@@ -196,8 +189,10 @@ router.put('/:email', auth, verifyUserData, (req, res, next) => {
  */
 router.delete('/:email', auth, (req, res, next) => {
   if (req.email != req.params.email && req.role != "admin") {
-    res.status(403).json({ error: true, message: "Forbidden" })
-    return
+    let e = Error("Forbidden")
+    e.status = 403
+    throw e
+
   }
 
   req.db('user')
@@ -206,22 +201,16 @@ router.delete('/:email', auth, (req, res, next) => {
     .then(count => {
       // Check if such a user exists
       if (count != 1) {
-        throw Error("User not found")
+        let e = Error("User not found")
+        e.status = 404
+        throw e
+
       }
 
       res.json({ message: `User with email ${req.params.email} has been deleted` })
 
     })
-    .catch(e => {
-      if (e.message == "User not found") {
-        res.status(404).json({ error: true, message: e.message })
-      }
-      else {
-        console.log(e.message)
-        res.status(500).json({ error: true })
-      }
-
-    })
+    .catch(e => next(e))
 })
 
 export default router

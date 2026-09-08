@@ -18,7 +18,7 @@ export default class AuthController {
 
   async login(email, password) {
     const data = await this.api.post('/user/login', { email, password });
-    const user = new User({ name: data.name, email: data.email, role: data.role });
+    const user = new User({ user_id: data.user_id, name: data.name, email: data.email, role: data.role, cohort: data.cohort });
     Storage.setToken(data.token);
     Storage.setUser(user);
     this.currentUser = user;

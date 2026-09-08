@@ -17,19 +17,24 @@ const router = express.Router()
  */
 router.post('/login', verifyUserLoginData, (req, res, next) => {
   const { email, password } = req.body
-  let name, role, status
+  let user_id, name, role, status, cohort 
 
   // Determine if user already exists in table
   req.db.from("user").select("*").where("email", "=", email)
     .then(users => {
       if (users.length === 0) {
-        throw new Error("Incorrect email or password")
+        let e = Error("Incorrect email or password")
+        e.status = 401;
+        throw e
+
       }
       // If user does exist, verify if passwords match
       const hash = users[0].password_hash
+      user_id = users[0].user_id // Will refactor all of this once branches are merged
       name = users[0].name
       role = users[0].role
       status = users[0].status
+      cohort = users[0].cohort
       return argon2.verify(hash, password)
 
     })
@@ -40,8 +45,9 @@ router.post('/login', verifyUserLoginData, (req, res, next) => {
 
       } else {
         // If passwords do not match, return error response
-        throw new Error("Incorrect email or password")
-
+        let e = Error('Incorrect email or password');
+        e.status = 401;
+        throw e
       }
     })
     .then(status => {
@@ -49,42 +55,33 @@ router.post('/login', verifyUserLoginData, (req, res, next) => {
         // Return JWT
         const expiresIn = 86400
         const exp = Math.floor(Date.now() / 1000) + expiresIn
-        const token = jwt.sign({ exp, email, role }, process.env.JWT_SECRET)
+        const token = jwt.sign({ exp, user_id, email, role, cohort }, process.env.JWT_SECRET)
         res.json({
           token,
           tokenType: "Bearer",
           expiresIn,
+          user_id,
           name,
           email: email,
-          role
+          role,
+          cohort
         })
 
       }
       else if (status == "Pending") {
-        throw new Error("User has not yet been verified by an administrator")
+        let e = Error("User has not yet been verified by an administrator")
+        e.status = 403
+        throw e 
 
       }
       else {
-        throw new Error("User status is not active")
+        let e = Error("User status is not active")
+        e.status = 403
+        throw e
 
       }
     })
-    .catch(e => {
-      if (e.message == "Incorrect email or password") {
-        res.status(401).json({ error: true, message: e.message })
-
-      }
-      else if (e.message == "User has not yet been verified by an administrator"
-        || e.message == "User status is not active") {
-        res.status(403).json({ error: true, message: e.message })
-
-      }
-      else {
-        console.log(e.message)
-        res.status(500).json({ error: true })
-
-      }
-    })
+    .catch(e => next(e))
 })
 
 /**
@@ -109,7 +106,9 @@ router.put('/password', auth, verifyUserPasswordData, (req, res, next) => {
 
       } else {
         // If passwords do not match, return error response
-        throw new Error("Incorrect password")
+        let e = Error("Incorrect password")
+        e.status = 401
+        throw e
 
       }
     })
@@ -121,17 +120,7 @@ router.put('/password', auth, verifyUserPasswordData, (req, res, next) => {
       res.json({ message: "User password updated" })
 
     })
-    .catch(e => {
-      if (e.message == "Incorrect password") {
-        res.status(401).json({ error: true, message: e.message })
-
-      }
-      else {
-        console.log(e.message)
-        res.status(500).json({ error: true })
-
-      }
-    })
+    .catch(e => next(e))
 })
 
 export default router

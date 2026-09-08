@@ -1,10 +1,12 @@
 export default class User {
-  constructor({ name, email, role, status, created } = {}) {
+  constructor({ user_id, name, email, role, status, created, cohort } = {}) {
+    this.user_id = user_id
     this.name = name;
     this.email = email;
     this.role = role;
     this.status = status;
     this.created = created;
+    this.cohort = cohort;
   }
 
   hasRole(role) {

@@ -6,6 +6,7 @@ import CohortController from './controller/CohortController.js';
 import MessageController from './controller/MessageController.js';
 import ResourceController from './controller/ResourceController.js';
 import FolderController from './controller/FolderController.js';
+import EventController from './controller/EventController.js'
 import SettingsController from './controller/SettingsController.js';
 
 import RegisterView from './view/RegisterView.js';
@@ -38,6 +39,7 @@ export default class App {
     this.settings = new SettingsController(this.api);
     this.resources = new ResourceController(this.api);
     this.folders = new FolderController(this.api);
+    this.event = new EventController(this.api)
 
     this.loginScreen = document.getElementById('login-screen');
     this.registerScreen = document.getElementById('register-screen');
