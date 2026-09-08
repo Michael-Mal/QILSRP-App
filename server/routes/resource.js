@@ -50,6 +50,9 @@ router.post('/create', auth, verifyResourceData, async (req, res, next) => {
     }    
 })
 
+/**
+ * The endpoint at which a resource's status can be updated to 'success' after the file upload is complete
+ */
 router.put('/:resourceID/complete', auth, async (req, res, next) => {
     const resourceID = Number.parseInt(req.params.resourceID, 10);
     if (Number.isNaN(resourceID))
@@ -70,6 +73,51 @@ router.put('/:resourceID/complete', auth, async (req, res, next) => {
         res.status(500).json({ error: true, message: "Failed to update resource status" })
     }
 })        
+
+/**
+ * The endpoint at which a resource's information can be updated
+ */
+router.put('/:resourceID/edit', auth, getAccessLevel, verifyResourceData, async (req, res, next) => {
+    const resourceID = Number.parseInt(req.params.resourceID, 10);
+    if (Number.isNaN(resourceID))
+    {
+        res.status(400).json({
+            error: true,
+            message: "Resource ID is invalid"
+        });
+        return;
+    }
+
+    const current_accessLevel = await req.db.from("resource").select('access_level').where('resource_id', resourceID).first();
+
+    // Check user has permissions to update this resource
+    if (!req.accessTo.includes(current_accessLevel.access_level)) {
+        res.status(403).json({ error: true, message: "User does not have permission to update this resource" });
+        return;
+    }
+
+    // Verify the user isn't attempting to give the resource an accessLevel higher than their own
+    if (!req.accessTo.includes(req.body.accessLevel)) {
+        res.status(403).json({ error: true, message: "User does not have permission to update resource with specified access level" });
+        return;
+    }
+
+
+    // Update resource information
+    try {
+        const { title, parentID, accessLevel } = req.body;
+        const result = await req.db.from("resource").where('resource_id', resourceID).update({
+            title,
+            parent_id: parentID,
+            access_level: accessLevel.toLowerCase()
+        });
+        res.json({ message: "Resource updated successfully" });
+    }
+    catch (e) {
+        console.log(e.message)
+        res.status(500).json({ error: true, message: "Failed to update resource" })
+    }
+})
 
 /**
  * The endpoint at which a resource's information can be retrieved
@@ -122,6 +170,11 @@ router.get('/:resourceID', auth, getAccessLevel, (req, res, next) => {
     })
 })
 
+/**
+ * The endpoint at which a resource's download URL can be retrieved. This URL is a presigned URL that allows the user to download the resource file directly from S3.
+ * The presigned URL is valid for a limited time (5 minutes) and can be used to download the resource file without requiring further authentication.
+ * The resource's access level is checked to ensure that the user has permission to download the resource.
+ */
 router.get('/:resourceID/download', auth, getAccessLevel, async (req, res, next) => {
     const resourceID = Number.parseInt(req.params.resourceID, 10);
     if (Number.isNaN(resourceID))
