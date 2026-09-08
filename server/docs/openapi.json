@@ -71,6 +71,36 @@
                       "examples": [
                         86400
                       ]
+                    },
+                    "user_id": {
+                      "type": "number",
+                      "examples": [
+                        "15"
+                      ]
+                    },
+                    "name": {
+                      "type": "string",
+                      "examples": [
+                        "Michelle Rivers"
+                      ]
+                    },
+                    "email": {
+                      "type": "string",
+                      "examples": [
+                        "mrivers@email.com"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "examples": [
+                        "ranger"
+                      ]
+                    },
+                    "cohort": {
+                      "type": "string",
+                      "examples": [
+                        "Brisbane Cohort"
+                      ]
                     }
                   }
                 }
@@ -818,7 +848,7 @@
           {
             "name": "name",
             "in": "query",
-            "description": "If this parameter is present, only users with this name will be returned (case-sensitive).",
+            "description": "If this parameter is present, only users with this name will be returned (case-sensitive)",
             "required": false,
             "schema": {
               "type": "string"
@@ -827,7 +857,7 @@
           {
             "name": "email",
             "in": "query",
-            "description": "If this parameter is present, only users with this email will be returned.",
+            "description": "If this parameter is present, only users with this email will be returned",
             "required": false,
             "schema": {
               "type": "string"
@@ -836,7 +866,7 @@
           {
             "name": "status",
             "in": "query",
-            "description": "If this parameter is present, only users with this status will be returned.",
+            "description": "If this parameter is present, only users with this status will be returned (admin-only)",
             "required": false,
             "schema": {
               "type": "string",
@@ -849,7 +879,7 @@
           {
             "name": "cohort",
             "in": "query",
-            "description": "If this parameter is present, only users in the specified cohort will be returned.",
+            "description": "If this parameter is present, only users in the specified cohort will be returned (admin-only)",
             "required": false,
             "schema": {
               "type": "string"
@@ -858,7 +888,7 @@
           {
             "name": "role",
             "in": "query",
-            "description": "If this parameter is present, only users in the specified role will be returned.",
+            "description": "If this parameter is present, only users in the specified role will be returned",
             "required": false,
             "schema": {
               "type": "string",
@@ -872,7 +902,7 @@
         ],
         "responses": {
           "200": {
-            "description": "An array of objects containing name, email, status, date created, role, and cohort",
+            "description": "An array of objects containing user_id, name, email, status, date created, role, and cohort. If a non-privilidged user uses this endpoint, the status, date created, and cohort information will be omitted, and will only return verified users within that user's cohort.",
             "content": {
               "application/json": {
                 "schema": {
@@ -880,6 +910,12 @@
                   "items": {
                     "type": "object",
                     "properties": {
+                      "user_id": {
+                        "type": "number",
+                        "examples": [
+                          15
+                        ]
+                      },
                       "name": {
                         "type": "string",
                         "examples": [
@@ -980,30 +1016,6 @@
                       }
                     }
                   ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "boolean",
-                      "examples": [
-                        true
-                      ]
-                    },
-                    "message": {
-                      "type": "string",
-                      "examples": [
-                        "Current user is not authorised to perform this function"
-                      ]
-                    }
-                  }
                 }
               }
             }

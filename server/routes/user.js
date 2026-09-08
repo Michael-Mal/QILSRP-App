@@ -79,10 +79,13 @@ router.put('/verify/:email', auth, verifyAdmin, (req, res, next) => {
 })
 
 /**
- * The endpoint at which (an admin) can retrieve select user info
+ * The endpoint at which users can retrieve select user info
  */
-router.get('/', auth, verifyAdmin, (req, res, next) => {
-  let fields = ['name', 'email', 'status', 'created', 'role', 'cohort']
+router.get('/', auth, (req, res, next) => {
+  let fields = ['user_id', 'name', 'email', 'role']
+  if (req.role == "admin") {
+    fields = fields.concat(['status', 'created', 'cohort'])
+  }
 
   req.db('user')
     .select(fields)
@@ -101,14 +104,24 @@ router.get('/', auth, verifyAdmin, (req, res, next) => {
       }
     })
     .andWhere(function () {
-      if (req.query.status != undefined) {
+      if (req.query.status != undefined && req.role == "admin") {
         this.where('status', req.query.status)
+
+      }
+      else if (req.role != "admin") { 
+        // Return only verified users
+        this.where('status', "Active")
 
       }
     })
     .andWhere(function () {
-      if (req.query.cohort != undefined) {
+      if (req.query.cohort != undefined && req.role == "admin") {
         this.where('cohort', req.query.cohort)
+
+      }
+      else if (req.role != "admin") {
+        // Return only users within the user's cohort
+        this.where('cohort', req.cohort)
 
       }
     })
@@ -120,16 +133,18 @@ router.get('/', auth, verifyAdmin, (req, res, next) => {
     })
 
     .then(cohort_members => {
-      cohort_members.forEach(member => {
-        // Convert created time to local timezone by adding 10 hours
-        const createdLocal = new Date(Date.parse(member.created) + 72000000).toISOString()
-        member.created = createdLocal.slice(0, 10) + " " + createdLocal.slice(11, 19)
-      });
+      if (req.role == "admin") {
+        cohort_members.forEach(member => {
+          // Convert created time to local timezone by adding 10 hours
+          const createdLocal = new Date(Date.parse(member.created) + 72000000).toISOString()
+          member.created = createdLocal.slice(0, 10) + " " + createdLocal.slice(11, 19)
+        })
+      }
 
       res.json(cohort_members)
 
     })
-    .catch(e => next(e))
+    //.catch(e => next(e))
 })
 
 /**
