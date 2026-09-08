@@ -8,11 +8,11 @@ export default class ResourcesView {
     this.container = container;
     this.app = app;
     this.currentFolderID = ROOT_ID;
+    this.user = this.app.auth.currentUser; // Store the current user for permission checks
   }
 
   async mount() {
-    const user = this.app.auth.currentUser;
-    const canAdd = !user.isStudent; // Flag for if the user should be allowed to add resources.
+    const canAdd = !this.user.isStudent; // Flag for if the user should be allowed to add resources.
 
     let current_folder_id = ROOT_ID; // Temp set, later will be parameter for population method
 
@@ -170,7 +170,9 @@ export default class ResourcesView {
         <div class="card">
           <h3>${escapeHtml(resource.title)}</h3>
           <p>${escapeHtml(resource.type)}</p>
-          <button data-action="download-resource" data-id="${resource.id}">Download</button> | Access level: ${escapeHtml(resource.accessLevel)}</p>
+          <button data-action="download-resource" data-id="${resource.id}">Download</button> | Access level: ${escapeHtml(resource.accessLevel)} | 
+          <button data-action="edit-resource" data-id="${resource.id}" data-uploader="${resource.uploaderID}">Edit</button> | 
+          <button data-action="delete-resource" data-id="${resource.id}" data-uploader="${resource.uploaderID}">Delete</button></p>
         </div>
       `;
     })
@@ -190,6 +192,22 @@ export default class ResourcesView {
     button.addEventListener('click', async (event) => {
       const resourceID = parseInt(event.target.getAttribute('data-id'), 10);
       this.downloadResource(resourceID);
+    });
+  });
+
+  this.container.querySelectorAll('[data-action="edit-resource"]').forEach(button => {
+    button.addEventListener('click', async (event) => {
+      const resourceID = parseInt(event.target.getAttribute('data-id'), 10);
+      const resourceUploaderID = parseInt(event.target.getAttribute('data-uploader'), 10);
+      this.editResource(resourceID, resourceUploaderID);
+    });
+  });
+
+  this.container.querySelectorAll('[data-action="delete-resource"]').forEach(button => {
+    button.addEventListener('click', async (event) => {
+      const resourceID = parseInt(event.target.getAttribute('data-id'), 10);
+      const resourceUploaderID = parseInt(event.target.getAttribute('data-uploader'), 10);
+      this.deleteResource(resourceID, resourceUploaderID);
     });
   });
 }
@@ -275,6 +293,51 @@ updateResourceInput(type) {
     catch (e) {
       console.error("Error downloading resource:", e);
       alert("The resource could not be downloaded, please try again. If the error persists, please contact a system administrator.");
+    }
+  }
+
+  async editResource(resourceID, resourceUploaderID) {
+    if (resourceUploaderID !== this.user.user_id && !this.user.isAdmin) {
+      alert("You do not have permission to edit this resource. Only the uploader or an admin can edit it.");
+      return;
+    }
+
+    const newTitle = prompt("Enter the new title for the resource (leave blank to keep current title):");
+    const roles = ['student', 'ranger', 'admin', '']; // Include empty string to allow keeping current access level
+    let newAccessLevel = prompt("Enter the new access level for the resource (student, ranger, admin) or leave blank to keep current level:").toLowerCase();
+
+    while (!roles.includes(newAccessLevel)) {
+      newAccessLevel = prompt("Invalid access level. Please enter a valid access level (student, ranger, admin) or leave blank to keep current level:").toLowerCase();
+    }
+    try {
+      await this.app.resources.editResource(resourceID, { title: newTitle || undefined, accessLevel: newAccessLevel || undefined });
+      this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form
+    }
+    catch (e) {
+      console.error("Error editing resource:", e);
+      alert("The resource could not be edited, please try again. If the error persists, please contact a system administrator.");
+    }
+  }
+
+  async deleteResource(resourceID, resourceUploaderID) {
+    if (resourceUploaderID !== this.user.user_id && !this.user.isAdmin) {
+      alert("You do not have permission to delete this resource. Only the uploader or an admin can delete it.");
+      return;
+    }
+
+    const confirmDelete = confirm("Are you sure you want to delete this resource? This action cannot be undone.");
+    if (!confirmDelete) {
+      return; // User cancelled the deletion
+    }
+    else {
+      try {
+        await this.app.resources.deleteResource(resourceID);
+        this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form
+      }
+      catch (e) {
+        console.error("Error deleting resource:", e);
+        alert("The resource could not be deleted, please try again. If the error persists, please contact a system administrator.");
+      }
     }
   }
 }

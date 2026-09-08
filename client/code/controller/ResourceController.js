@@ -90,4 +90,23 @@ export default class ResourceController {
   async completeResource(resourceID) {
     return await this.api.put(`/resource/${resourceID}/complete`, {}, { auth: true });
   }
+
+  /**
+   * Edits a resource's editable fields (title and accessLevel) in the database. Only the uploader of the resource or an admin can edit a resource.
+   * @param {*} resourceID - Id of the resource to be edited
+   * @param {*} param1 - Object containing the new title and/or accessLevel for the resource. If a field is not provided, it will not be changed.
+   * @returns 
+   */
+  async editResource(resourceID, { title, accessLevel }) {
+    return await this.api.put(`/resource/${resourceID}/edit`, { title, accessLevel }, { auth: true });
+  }
+
+  /**
+   * Deletes a resource from the database.
+   * @param {*} resourceID - Id of the resource to be deleted
+   * @returns 
+   */
+  async deleteResource(resourceID) {
+    return await this.api.delete(`/resource/${resourceID}/delete`, { auth: true });
+  }
 }

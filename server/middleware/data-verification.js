@@ -146,23 +146,15 @@ const verifyResourceTitle = (title) => {
 }
 
 /**
- * Validates the format and length of a folders name.
- * @param {string} name - the name of the folder
+ * Validates a provided access level, throwing an error if it is not one of the recognised roles
+ * @param {*} accessLevel - Provided access level to check 
  */
-const verifyFolderName = (name) => {
-  if (name.length > 128) {
-    throw new Error("Folder name must not exceed 128 characters")
-  }
-
-  if (name.trim() === "") {
-    throw new Error("Folder name must not be empty")
-  }
-
-  if (/[<>:"/|\\?*]/.test(name)) {
-    throw new Error('Folder name contains invalid characters. Restricted characters: < > : " / | \\ ? *')
+const verifyValidAccessLevel = (accessLevel) => {
+  if (!roles.includes(accessLevel)) {
+    const errorMessage = "Access level must be one of: " + roles.map(role => `'${role}'`).join(", ")
+    throw new Error(errorMessage)
   }
 }
-
 
 /**
  * Verifies the information provided for a resource being added to the database, throwing an error if some information is invalid.
@@ -201,10 +193,13 @@ const verifyResourceData = (req, res, next) => {
   }
 
   // Check if accessLevel is a valid value, currently must be one of the roles
-  if (!roles.includes(accessLevel.toLowerCase())) {
+  try {
+    verifyValidAccessLevel(accessLevel.toLowerCase())
+  }
+  catch (e) {
     res.status(400).json({
       error: true,
-      message: "Access level must be one of 'student', 'ranger', or 'admin'"
+      message: e.message
     })
     return
   }
@@ -214,6 +209,70 @@ const verifyResourceData = (req, res, next) => {
   next()
 }
 
+const verifyResourceEditData = (req, res, next) => {
+  const { title, accessLevel } = req.body ?? {}
+
+  if (!title && !accessLevel) {
+    res.status(400).json({
+      error: true,
+      message: "Request body incomplete, at least one of title or accessLevel must be provided"
+    })
+    return
+  }
+
+  // Check if title is valid, if it is provided
+  if (title) {
+    try {
+      verifyResourceTitle(title)
+    }
+    catch (e) {
+      res.status(400).json({
+        error: true,
+        message: e.message
+      })
+      return
+    }
+  }
+
+  // Check if accessLevel is a valid value, if it is provided. Currently must be one of the roles
+  if (accessLevel) {
+    try {
+      verifyValidAccessLevel(accessLevel.toLowerCase())
+    }
+    catch (e) {
+      res.status(400).json({
+        error: true,
+        message: e.message
+      })
+      return
+    }
+  }
+
+  next()
+}
+
+/**
+ * Validates the format and length of a folders name.
+ * @param {string} name - the name of the folder
+ */
+const verifyFolderName = (name) => {
+  if (name.length > 128) {
+    throw new Error("Folder name must not exceed 128 characters")
+  }
+
+  if (name.trim() === "") {
+    throw new Error("Folder name must not be empty")
+  }
+
+  if (/[<>:"/|\\?*]/.test(name)) {
+    throw new Error('Folder name contains invalid characters. Restricted characters: < > : " / | \\ ? *')
+  }
+}
+
+/**
+ * Validates the information provided for a folder being added to the database, throwing an error if some information is invalid.
+ * @returns an erorr if some information is invalid
+ */
 const verifyFolderData = (req, res, next) => {
   const { name, parentID, accessLevel} = req.body ?? {}
 
@@ -226,7 +285,7 @@ const verifyFolderData = (req, res, next) => {
   }
 
   try {
-    verifyFolderTitle(name)
+    verifyFolderName(name)
   }
   catch (e) {
       res.status(400).json({
@@ -246,7 +305,7 @@ const verifyFolderData = (req, res, next) => {
   }
 }
   
-/* Validates that the event in the body of the request is in the correct format
+/** Validates that the event in the body of the request is in the correct format
  * @returns An error if any field is null or if the date is invalid
  */
 const verifyEventData = (req, res, next) => {
@@ -285,4 +344,4 @@ const verifyEventData = (req, res, next) => {
   next()
 }
 
-export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyResourceData, verifyFolderData, verifyEventData }
+export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyResourceData, verifyResourceEditData, verifyFolderData, verifyEventData }

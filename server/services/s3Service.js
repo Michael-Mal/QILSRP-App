@@ -1,4 +1,4 @@
-import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import s3 from '../s3.js';
 
@@ -33,5 +33,14 @@ async function generateDownloadURL(key, title, extension, mimeType ) {
     return downloadURL;
 }
 
+async function deleteResourceFromS3(key) {
+    const command = new DeleteObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: key
+    });
+    const response = await s3.send(command);
 
-export { generateUploadURL, generateDownloadURL };
+    return response; // Return the response from S3, which may contain metadata about the deletion
+}
+
+export { generateUploadURL, generateDownloadURL, deleteResourceFromS3 };
