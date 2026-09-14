@@ -97,7 +97,30 @@ const verifyUserData = (req, res, next) => {
 
   }
 
-  next()
+  if (role != "admin") {
+    // Check if cohort exists
+    req.db('cohort')
+      .count('*')
+      .where('name', cohort)
+      .then(count => {
+        if (count[0]['count(*)'] != 1) {
+          let e = Error("Cohort does not exist")
+          e.status = 400
+          throw e
+
+        }
+
+        next()
+
+      })
+      .catch(e => next(e))
+    
+  }
+  else {
+    next()
+
+  }
+
 }
 
 /**
@@ -120,6 +143,23 @@ const verifyUserPasswordData = (req, res, next) => {
 
   }
   catch (e) {
+    e.status = 400
+    throw e
+
+  }
+
+  next()
+}
+
+/**
+ * Validates that the cohort in the body of the request is in the correct format
+ * @returns An error if the name field is invalid
+ */
+const verifyCohortData = (req, res, next) => {
+  const { name } = req.body ?? {}
+
+  if (!name) {
+    let e = Error("Request body incomplete: name is required.")
     e.status = 400
     throw e
 
@@ -168,4 +208,4 @@ const verifyEventData = (req, res, next) => {
   next()
 }
 
-export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyEventData }
+export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyCohortData, verifyEventData }

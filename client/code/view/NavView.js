@@ -18,8 +18,10 @@ export default class NavView {
     const user = this.app.auth.currentUser;
     const pages = [...PAGES];
 
-    if (user.isRanger || user.isAdmin) pages.push({ key: 'cohorts', label: 'Cohorts' });
-    if (user.isAdmin) pages.push({ key: 'admin', label: 'Admin' });
+    if (user.isAdmin) {
+      pages.push({ key: 'cohorts', label: 'Cohorts' });
+      pages.push({ key: 'admin', label: 'Admin' })
+    };
 
     this.container.innerHTML = pages
       .map(page => `<button id="nav-${page.key}" data-nav="${page.key}">${page.label}</button>`)

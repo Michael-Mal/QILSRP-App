@@ -21,7 +21,7 @@ export default class AdminView {
 
     const [users, cohorts] = await Promise.all([
       this.app.users.list(this.nameFilter, this.emailFilter, this.statusFilter, this.cohortFilter, this.roleFilter),
-      this.app.cohorts.list(),
+      this.app.cohort.list(),
     ]);
 
     this.container.innerHTML = `

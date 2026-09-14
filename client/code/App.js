@@ -32,7 +32,7 @@ export default class App {
 
     this.auth = new AuthController(this.api);
     this.users = new UserController(this.api);
-    this.cohorts = new CohortController(this.api);
+    this.cohort = new CohortController(this.api);
     this.messages = new MessageController(this.api);
     this.event = new EventController(this.api)
     this.settings = new SettingsController(this.api)
