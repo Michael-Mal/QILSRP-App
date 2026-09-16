@@ -1,5 +1,5 @@
 import express from 'express'
-import { verifyEventData } from '../middleware/data-verification.js'
+import { verifyEventData, verifyEventMemberData } from '../middleware/data-verification.js'
 import { auth, optionalAuth, verifyAdmin } from '../middleware/authorisation.js'
 
 const router = express.Router()
@@ -197,6 +197,106 @@ router.delete('/:id', auth, (req, res, next) => {
 
     })
     .catch(e => next(e))
+})
+
+/**
+ * The endpoint at which members can be invited to an event
+ */
+router.post('/:id/members', auth, verifyAdmin, verifyEventMemberData, (req, res, next) => {
+  req.db("event")
+    .where({ event_id: req.params.id })
+    .then(event => {
+      // Check if such an event exists
+      if (event.length != 1) {
+        let e = Error("Event not found")
+        e.status = 404
+        throw e
+
+      }
+      // Add members
+      let data = []
+      req.body.forEach(user_id => {
+        data.push({ event_id: req.params.id, user_id, confirmed: 0 })
+      });
+
+      return req.db('event_member')
+        .insert(data)
+
+    })
+    .then(() => {
+      res.json({ message: "Added members to the event successfully" })
+
+    })
+    .catch(e => {
+      if ('errno' in e) {
+        // Check for duplicates
+        if (e.errno == 1062) {
+          e.message = "One or more users are already invited to this event"
+          e.status = 400
+
+        }
+      }
+
+      next(e)
+
+    })
+})
+
+/**
+ * The endpoint at which users can retrieve event membership info
+ */
+router.get('/:id/members', auth, (req, res, next) => {
+  let eventConfirmation = []
+  const user_fields = ["user_id", "name", "email", "role"]
+
+  // Check that this user created/was invited to this event
+  req.db("event_member")
+    .where({ event_id: req.params.id, user_id: req.user_id })
+    .then(event => {
+      if (event.length != 1) {
+        let e = Error("Event not found")
+        e.status = 404
+        throw e
+
+      }
+
+      return req.db("event_member")
+        .select(['user_id', 'confirmed'])
+        .where('event_id', req.params.id)
+
+    })
+    .then(dbRes => {
+      // Initialise user ids and event confirmation variables for later
+      let userIds = []
+      for (let i = 0; i < dbRes.length; i++) {
+        userIds[i] = dbRes[i].user_id
+      }
+      eventConfirmation = dbRes
+
+      return req.db('user')
+        .select(user_fields)
+        .whereIn('user_id', userIds)
+
+    })
+    .then(users => {
+      for (let i = 0; i < users.length; i++) {
+        // Add confirmed data
+        console.log(eventConfirmation)
+        console.log(users)
+        for (let j = 0; j < eventConfirmation.length; j++) {
+          if (users[i].user_id == eventConfirmation[j].user_id) {
+            users[i].confirmed = (eventConfirmation[j].confirmed == 1) ? true : false
+            break
+
+          }
+        }
+      }
+
+      res.json(users)
+
+    })
+    .catch(e => next(e))
+
 })
 
 /**------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! --------------------

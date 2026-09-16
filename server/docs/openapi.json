@@ -2872,47 +2872,46 @@
             "description": "Bad request",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "boolean",
-                      "examples": [
-                        true
-                      ]
-                    },
-                    "message": {
-                      "type": "string",
-                      "examples": [
-                        "Request body incomplete: an array of user IDs is required."
-                      ]
+                "oneOf": [
+                  {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Request body invalid: the array of user IDs must be integers"
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "One or more users are already invited to this event"
+                          ]
+                        }
+                      }
                     }
                   }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Logged-in user does not match the user whose event you are attempting to modify",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "boolean",
-                      "examples": [
-                        true
-                      ]
-                    },
-                    "message": {
-                      "type": "string",
-                      "examples": [
-                        "Forbidden"
-                      ]
-                    }
-                  }
-                }
+                ]
               }
             }
           },
@@ -2965,7 +2964,7 @@
         ],
         "responses": {
           "200": {
-            "description": "An array of the users' name, email, role, and invitation status",
+            "description": "An array of the users' id, name, email, role, and invitation status",
             "content": {
               "application/json": {
                 "schema": {
@@ -2973,6 +2972,12 @@
                   "items": {
                     "type": "object",
                     "properties": {
+                      "user_id": {
+                        "type": "integer",
+                        "examples": [
+                          15
+                        ]
+                      },
                       "name": {
                         "type": "string",
                         "examples": [

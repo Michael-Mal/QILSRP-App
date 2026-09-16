@@ -114,7 +114,7 @@ const verifyUserData = (req, res, next) => {
 
       })
       .catch(e => next(e))
-    
+
   }
   else {
     next()
@@ -208,4 +208,32 @@ const verifyEventData = (req, res, next) => {
   next()
 }
 
-export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyCohortData, verifyEventData }
+/**
+ * Validates that the user ids in the body of the request is in the correct format
+ * @returns An error if the format is incorrect or any value is not an integer
+ */
+const verifyEventMemberData = (req, res, next) => {
+  const user_ids = req.body
+  const error_message = "Request body invalid: the array of user IDs must be integers"
+  try {
+    if (typeof user_ids[0] != "number") {
+      throw Error(error_message)
+
+    }
+    user_ids.forEach(id => {
+      if (typeof id != "number") {
+      throw Error(error_message)
+
+    }
+    });
+    next()
+
+  }
+  catch (e) {
+    e.status = 400
+    next(e)
+
+  }
+}
+
+export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyCohortData, verifyEventData, verifyEventMemberData }
