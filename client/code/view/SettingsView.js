@@ -41,7 +41,10 @@ export default class SettingsView {
     const changePasswordBtn = this.container.querySelector('[data-action="chpass"]');
     if (changePasswordBtn) changePasswordBtn.addEventListener('click', () => this.changePassword());
 
-    this.container.querySelector('[data-action="logout"]').addEventListener('click', () => this.app.logout());
+    this.container.querySelector('[data-action="logout"]').addEventListener('click', () => {
+      this.app.pages.events.event_id = null // Reset to event overview page
+      this.app.logout()
+    });
   }
 
   async changePassword() {

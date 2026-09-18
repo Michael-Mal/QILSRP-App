@@ -324,36 +324,30 @@ router.delete('/:id/members', auth, verifyAdmin, verifyEventMemberData, (req, re
     .catch(e => next(e))
 })
 
-/**------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! --------------------
----------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! --------------------
----------------- None of the below have been tested yet --------------------
----------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! --------------------
----------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ------------------*/
+/**
+ * The endpoint at which a pending event can be confirmed by the invited user
+ */
+router.post('/:id/confirm', auth, (req, res, next) => {
+  req.db.from("event_member")
+    .select("confirmed")
+    .where({
+      event_id: req.params.id,
+      user_id: req.user_id,
+      confirmed: 0
+    })
+    .update('confirmed', 1)
+    .then(result => {
+      if (result != 1) {
+        let e = Error("Event not found or is not pending confirmation")
+        e.status = 404
+        throw e
 
-// /**
-//  * The endpoint at which a pending event can be confirmed by the invited user
-//  */
-// router.put('/:id/confirm', auth, (req, res, next) => {
-//   req.db.from("event_member")
-//     .select("confirmed")
-//     .where({
-//       event_id: req.params.id,
-//       user_id: req.user_id,
-//       confirmed: 0
-//     })
-//     .update('confirmed', 1)
-//     .then(result => {
-//       if (result != 1) {
-//         let e = Error("Event not found or is not pending confirmation")
-//         e.status = 404
-//         throw e
+      }
 
-//       }
+      res.json({ message: `Event with id ${req.params.id} has been confirmed` })
 
-//       res.json({ message: `Event with id ${req.params.id} has been confirmed` })
-
-//     })
-//     .catch(e => next(e))
-// })
+    })
+    .catch(e => next(e))
+})
 
 export default router

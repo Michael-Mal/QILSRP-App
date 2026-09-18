@@ -58,7 +58,7 @@ export default class EventsView {
                 <td>
                   ${event.user_id == user.user_id ? `<button data-action="edit-event" data-id="${escapeHtml(event.event_id)}">Edit</button>` : ""}
                   ${event.user_id == user.user_id ? `<button data-action="delete-event" data-id="${escapeHtml(event.event_id)}">Delete</button>` : ""}
-                  ${!event.confirmed ? `<button data-action="confirm-user" data-id="${escapeHtml(event.event_id)}">Confirm</button>` : ""}
+                  ${!event.confirmed ? `<button data-action="confirm" data-id="${escapeHtml(event.event_id)}">Confirm</button>` : ""}
                   <button data-action="member" data-id="${escapeHtml(event.event_id)}">Members</button>
                 </td>
               </tr>
@@ -82,6 +82,10 @@ export default class EventsView {
 
       this.container.querySelectorAll('[data-action="delete-event"]').forEach(button => {
         button.addEventListener('click', () => this.deleteEvent(button.dataset.id));
+      });
+
+      this.container.querySelectorAll('[data-action="confirm"]').forEach(button => {
+        button.addEventListener('click', () => this.confirm(button.dataset.id));
       });
 
       this.container.querySelectorAll('[data-action="member"]').forEach(button => {
@@ -214,9 +218,16 @@ export default class EventsView {
 
   }
 
+  async confirm(id) {
+    if (!confirm(`Confirm you will be attending this event?`)) return;
+    await this.app.event.confirm(id);
+    await this.mount();
+  }
+
   async showMembers(id) {
     this.event_id = id
     await this.mount()
+    window.scrollTo(0, 0)
   }
 
   async filterUsers() {
@@ -250,5 +261,6 @@ export default class EventsView {
   async back() {
     this.event_id = null
     await this.mount()
+    window.scrollTo(0, 0)
   }
 }
