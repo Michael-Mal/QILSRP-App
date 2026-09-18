@@ -3249,30 +3249,6 @@
               }
             }
           },
-          "403": {
-            "description": "Logged-in user does not match the user whose event you are attempting to modify",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "boolean",
-                      "examples": [
-                        true
-                      ]
-                    },
-                    "message": {
-                      "type": "string",
-                      "examples": [
-                        "Forbidden"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
           "404": {
             "description": "No event was found containing this ID",
             "content": {

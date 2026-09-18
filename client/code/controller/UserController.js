@@ -42,7 +42,7 @@ export default class UserController {
   }
 
   async remove(email) {
-    return this.api.delete(`/user/${encodeURIComponent(email)}`, { auth: true });
+    return this.api.delete(`/user/${encodeURIComponent(email)}`, {}, { auth: true });
   }
 
   async verify(email) {

@@ -281,8 +281,6 @@ router.get('/:id/members', auth, (req, res, next) => {
     .then(users => {
       for (let i = 0; i < users.length; i++) {
         // Add confirmed data
-        console.log(eventConfirmation)
-        console.log(users)
         for (let j = 0; j < eventConfirmation.length; j++) {
           if (users[i].user_id == eventConfirmation[j].user_id) {
             users[i].confirmed = (eventConfirmation[j].confirmed == 1) ? true : false
@@ -297,6 +295,33 @@ router.get('/:id/members', auth, (req, res, next) => {
     })
     .catch(e => next(e))
 
+})
+
+/**
+ * The endpoint at which members can be invited to an event
+ */
+router.delete('/:id/members', auth, verifyAdmin, verifyEventMemberData, (req, res, next) => {
+  req.db("event")
+    .where({ event_id: req.params.id })
+    .then(event => {
+      // Check if such an event exists
+      if (event.length != 1) {
+        let e = Error("Event not found")
+        e.status = 404
+        throw e
+
+      }
+      // Delete members
+      return req.db('event_member')
+        .whereIn('user_id', req.body)
+        .del()
+
+    })
+    .then(() => {
+      res.json({ message: "Removed members from the event successfully" })
+
+    })
+    .catch(e => next(e))
 })
 
 /**------------- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! --------------------

@@ -34,10 +34,22 @@ export default class UserController {
   }
 
   async remove(id) {
-    return this.api.delete(`/event/${encodeURIComponent(id)}`, { auth: true });
+    return this.api.delete(`/event/${encodeURIComponent(id)}`, {}, { auth: true });
+  }
+
+  async invite(id, ids) {
+    return this.api.post(`/event/${encodeURIComponent(id)}/members`, ids, { auth: true })
+  }
+
+  async members(id) {
+    return this.api.get(`/event/${encodeURIComponent(id)}/members`, { auth: true })
+  }
+
+  async removeMembers(id, ids) {
+    return this.api.delete(`/event/${encodeURIComponent(id)}/members`, ids, { auth: true })
   }
 
   async confirm(id) {
-    return this.api.post(`/${encodeURIComponent(id)}/confirm`, {}, { auth: true })
+    return this.api.post(`/event/${encodeURIComponent(id)}/confirm`, {}, { auth: true })
   }
 }

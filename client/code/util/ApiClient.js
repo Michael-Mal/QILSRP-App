@@ -58,7 +58,7 @@ export default class ApiClient {
     return this.request(path, { ...options, method: 'PUT', body });
   }
 
-  delete(path, options) {
-    return this.request(path, { ...options, method: 'DELETE' });
+  delete(path, body, options) {
+    return this.request(path, { ...options, method: 'DELETE', body });
   }
 }

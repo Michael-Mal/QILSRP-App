@@ -18,8 +18,7 @@ export default class UserController {
   }
 
   async remove(name) {
-    console.log(name)
-    return this.api.delete(`/cohort/${encodeURIComponent(name)}`, { auth: true });
+    return this.api.delete(`/cohort/${encodeURIComponent(name)}`, {}, { auth: true });
   }
 
   async listForUser(user) {
