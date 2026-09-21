@@ -97,7 +97,30 @@ const verifyUserData = (req, res, next) => {
 
   }
 
-  next()
+  if (role != "admin") {
+    // Check if cohort exists
+    req.db('cohort')
+      .count('*')
+      .where('name', cohort)
+      .then(count => {
+        if (count[0]['count(*)'] != 1) {
+          let e = Error("Cohort does not exist")
+          e.status = 400
+          throw e
+
+        }
+
+        next()
+
+      })
+      .catch(e => next(e))
+
+  }
+  else {
+    next()
+
+  }
+
 }
 
 /**
@@ -247,6 +270,19 @@ const verifyResourceEditData = (req, res, next) => {
       return
     }
   }
+  
+ /* Validates that the cohort in the body of the request is in the correct format
+ * @returns An error if the name field is invalid
+ */
+const verifyCohortData = (req, res, next) => {
+  const { name } = req.body ?? {}
+
+  if (!name) {
+    let e = Error("Request body incomplete: name is required.")
+    e.status = 400
+    throw e
+
+  }
 
   next()
 }
@@ -346,4 +382,33 @@ const verifyEventData = (req, res, next) => {
   next()
 }
 
-export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyResourceData, verifyResourceEditData, verifyFolderData, verifyEventData }
+/**
+ * Validates that the user ids in the body of the request is in the correct format
+ * @returns An error if the format is incorrect or any value is not an integer
+ */
+const verifyEventMemberData = (req, res, next) => {
+  const user_ids = req.body
+  const error_message = "Request body invalid: the array of user IDs must be integers"
+  try {
+    if (typeof user_ids[0] != "number") {
+      throw Error(error_message)
+
+    }
+    user_ids.forEach(id => {
+      if (typeof id != "number") {
+      throw Error(error_message)
+
+    }
+    });
+    next()
+
+  }
+  catch (e) {
+    e.status = 400
+    next(e)
+
+  }
+}
+}
+
+export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyCohortData, verifyResourceData, verifyResourceEditData, verifyEventData, verifyEventMemberData }

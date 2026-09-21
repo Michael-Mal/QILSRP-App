@@ -1,7 +1,7 @@
 export default class Cohort {
-  constructor({ name, userCount = [] } = {}) {
+  constructor({ name, userCount } = {}) {
     this.name = name;
-    this.userCount = userCount;
+    this.userCount = userCount
   }
 }
 

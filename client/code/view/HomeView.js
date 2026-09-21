@@ -8,7 +8,7 @@ export default class HomeView {
 
   async mount() {
     const user = this.app.auth.currentUser;
-    const cohorts = await this.app.cohorts.listForUser(user);
+    const cohorts = await this.app.cohort.listForUser(user);
 
     this.container.innerHTML = `
       <h2>Home</h2>

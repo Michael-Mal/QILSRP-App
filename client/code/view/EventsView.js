@@ -9,15 +9,23 @@ export default class EventsView {
   yearFilter = null
   monthFilter = null
 
+  event_id = null
+
+  nameFilter = null
+  emailFilter = null
+  cohortFilter = null
+  roleFilter = null
+
   async mount() {
     const user = this.app.auth.currentUser
-    const canCreate = user.isAdmin
-    const events = await this.app.event.list(this.yearFilter, this.monthFilter)
 
-    let html = '<h2>Events</h2>'
+    if (!this.event_id) {
+      const events = await this.app.event.list(this.yearFilter, this.monthFilter)
 
-    if (canCreate) {
-      html += `
+      let html = '<h2>Events</h2>'
+
+      if (user.isAdmin) {
+        html += `
         <div class="card">
           <h3>Create Event</h3>
           <label>Name</label><input type="text" id="post-event-name" />
@@ -28,9 +36,9 @@ export default class EventsView {
           <p id="post-event-error" class="error-text"></p>
         </div>
       `;
-    }
+      }
 
-    html += `
+      html += `
       <div class="card">
         <h3>Events</h3>
         <label>Year</label><input type="number" id="filter-year" />
@@ -50,7 +58,8 @@ export default class EventsView {
                 <td>
                   ${event.user_id == user.user_id ? `<button data-action="edit-event" data-id="${escapeHtml(event.event_id)}">Edit</button>` : ""}
                   ${event.user_id == user.user_id ? `<button data-action="delete-event" data-id="${escapeHtml(event.event_id)}">Delete</button>` : ""}
-                  ${!event.confirmed ? `<button data-action="confirm-user" data-id="${escapeHtml(event.event_id)}">Confirm</button>` : ""}
+                  ${!event.confirmed ? `<button data-action="confirm" data-id="${escapeHtml(event.event_id)}">Confirm</button>` : ""}
+                  <button data-action="member" data-id="${escapeHtml(event.event_id)}">Members</button>
                 </td>
               </tr>
             `).join('')}
@@ -59,21 +68,99 @@ export default class EventsView {
       </div>
     `;
 
-    this.container.innerHTML = html;
+      this.container.innerHTML = html;
 
-    const postEventBtn = this.container.querySelector('[data-action="post-event"]');
-    if (postEventBtn) postEventBtn.addEventListener('click', () => this.postEvent());
+      const postEventBtn = this.container.querySelector('[data-action="post-event"]');
+      if (postEventBtn) postEventBtn.addEventListener('click', () => this.postEvent());
 
-    const filterBtn = this.container.querySelector('[data-action="filter"]');
-    if (filterBtn) filterBtn.addEventListener('click', () => this.filterEvents());
+      const filterBtn = this.container.querySelector('[data-action="filter"]');
+      if (filterBtn) filterBtn.addEventListener('click', () => this.filterEvents());
 
-    this.container.querySelectorAll('[data-action="edit-event"]').forEach(button => {
-      button.addEventListener('click', () => this.editEvent(button.dataset.id));
-    });
+      this.container.querySelectorAll('[data-action="edit-event"]').forEach(button => {
+        button.addEventListener('click', () => this.editEvent(button.dataset.id));
+      });
 
-    this.container.querySelectorAll('[data-action="delete-event"]').forEach(button => {
-      button.addEventListener('click', () => this.deleteEvent(button.dataset.id));
-    });
+      this.container.querySelectorAll('[data-action="delete-event"]').forEach(button => {
+        button.addEventListener('click', () => this.deleteEvent(button.dataset.id));
+      });
+
+      this.container.querySelectorAll('[data-action="confirm"]').forEach(button => {
+        button.addEventListener('click', () => this.confirm(button.dataset.id));
+      });
+
+      this.container.querySelectorAll('[data-action="member"]').forEach(button => {
+        button.addEventListener('click', () => this.showMembers(button.dataset.id));
+      });
+
+    }
+    else {
+      // Member management
+      const members = await this.app.event.members(this.event_id)
+      let member_ids = []
+      members.forEach(m => {
+        member_ids.push(m.user_id)
+      })
+      let users = null
+      if (user.isAdmin) {
+        users = await this.app.users.list(this.nameFilter, this.emailFilter, null, this.cohortFilter, this.roleFilter)
+      }
+
+      this.container.innerHTML = `
+        <div class="card">
+          <h3>Event Members</h3>
+          <table>
+            <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Confirmed</th></tr></thead>
+            <tbody>
+              ${members.map(m => `
+                  <td>${escapeHtml(m.email)}</td>
+                  <td>${escapeHtml(m.name)}</td>
+                  <td>${escapeHtml(m.role)}</td>
+                  <td>${escapeHtml(m.confirmed)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      if (user.isAdmin)
+        this.container.innerHTML += `
+          <div class="card">
+            <h3>Manage Invitees</h3>
+            <label>Name</label><input type="text" id="fil-name" />
+            <label>Email</label><input type="text" id="fil-email" />
+            <label>Cohort</label><input type="text" id="fil-cohort" />
+            <label>Role</label><input type="text" id="fil-role" />
+            <button data-action="filter">Filter</button>
+            <h4>Invite New Users</h4>
+            ${users.map(u => `
+              ${!member_ids.includes(u.user_id) ? `<input type="checkbox" id="${escapeHtml(u.user_id)}" name="invitees" value="${escapeHtml(u.user_id)}"><label for="${escapeHtml(u.user_id)}" style="display:inline;">${escapeHtml(u.name)} (${escapeHtml(u.role || '-')}) - ${escapeHtml(u.email)}</label><br>` : ""}
+            `).join('')}
+            <br>
+            <button data-action="invite-users">Invite</button>
+            <h4>Remove Users From Event</h4>
+            ${users.map(u => `
+              ${member_ids.includes(u.user_id) ? `<input type="checkbox" id="${escapeHtml(u.user_id)}" name="deletees" value="${escapeHtml(u.user_id)}"><label for="${escapeHtml(u.user_id)}" style="display:inline;">${escapeHtml(u.name)} (${escapeHtml(u.role || '-')}) - ${escapeHtml(u.email)}</label><br>` : ""}
+            `).join('')}
+            <br>
+            <button data-action="delete-users">Remove</button>
+          </div>
+        `;
+      
+      this.container.innerHTML += `<button data-action="back">Back</button>`
+
+      const filterBtn = this.container.querySelector('[data-action="filter"]');
+      if (filterBtn) filterBtn.addEventListener('click', () => this.filterUsers());
+
+      const inviteBtn = this.container.querySelector('[data-action="invite-users"]');
+      if (inviteBtn) inviteBtn.addEventListener('click', () => this.inviteUsers());
+
+      const deleteBtn = this.container.querySelector('[data-action="delete-users"]');
+      if (deleteBtn) deleteBtn.addEventListener('click', () => this.deleteUsers());
+
+      const backBtn = this.container.querySelector('[data-action="back"]');
+      if (backBtn) backBtn.addEventListener('click', () => this.back());
+    }
   }
 
   async postEvent() {
@@ -129,5 +216,51 @@ export default class EventsView {
     await this.app.event.remove(id);
     await this.mount();
 
+  }
+
+  async confirm(id) {
+    if (!confirm(`Confirm you will be attending this event?`)) return;
+    await this.app.event.confirm(id);
+    await this.mount();
+  }
+
+  async showMembers(id) {
+    this.event_id = id
+    await this.mount()
+    window.scrollTo(0, 0)
+  }
+
+  async filterUsers() {
+    this.nameFilter = this.container.querySelector('#fil-name').value.trim();
+    this.emailFilter = this.container.querySelector('#fil-email').value.trim();
+    this.cohortFilter = this.container.querySelector('#fil-cohort').value.trim();
+    this.roleFilter = this.container.querySelector('#fil-role').value.trim();
+    await this.mount();
+  }
+
+  async inviteUsers() {
+    let invitees = this.container.querySelectorAll('input[name="invitees"]:checked');
+    let invitee_ids = [];
+    invitees.forEach((checkbox) => {
+      invitee_ids.push(parseInt(checkbox.value));
+    });
+    await this.app.event.invite(this.event_id, invitee_ids);
+    await this.mount()
+  }
+
+  async deleteUsers() {
+    let deletees = this.container.querySelectorAll('input[name="deletees"]:checked');
+    let deletee_ids = [];
+    deletees.forEach((checkbox) => {
+      deletee_ids.push(parseInt(checkbox.value));
+    });
+    await this.app.event.removeMembers(this.event_id, deletee_ids);
+    await this.mount()
+  }
+
+  async back() {
+    this.event_id = null
+    await this.mount()
+    window.scrollTo(0, 0)
   }
 }
