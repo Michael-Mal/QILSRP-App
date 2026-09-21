@@ -270,6 +270,8 @@ const verifyResourceEditData = (req, res, next) => {
       return
     }
   }
+
+  next()
 }
   
  /* Validates that the cohort in the body of the request is in the correct format

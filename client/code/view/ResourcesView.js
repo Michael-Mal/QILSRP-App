@@ -174,7 +174,8 @@ export default class ResourcesView {
           <p>${escapeHtml(resource.type)}</p>
           <button data-action="download-resource" data-id="${resource.id}">Download</button> | Access level: ${escapeHtml(resource.accessLevel)} | 
           <button data-action="edit-resource" data-id="${resource.id}" data-uploader="${resource.uploaderID}">Edit</button> | 
-          <button data-action="delete-resource" data-id="${resource.id}" data-uploader="${resource.uploaderID}">Delete</button></p>
+          <button data-action="delete-resource" data-id="${resource.id}" data-uploader="${resource.uploaderID}">Delete</button> &ensp; | &ensp;
+          <button data-action="share-resource" data-id="${resource.id}" data-title="${resource.title}">Copy link</button></p>
         </div>
       `;
     })
@@ -226,6 +227,14 @@ export default class ResourcesView {
       this.deleteResource(resourceID, resourceUploaderID);
     });
   });
+
+  this.container.querySelectorAll('[data-action="share-resource"]').forEach( button => {
+    button.addEventListener('click', async (event) => {
+      const resourceID = parseInt(event.target.getAttribute('data-id'), 10);
+      const resourceTitle = event.target.getAttribute('data-title');
+      this.shareResourceURL(resourceID, resourceTitle)
+    })
+  })
 }
 
 // Updates the file input of the resource when the resource type is changed
@@ -389,7 +398,8 @@ updateResourceInput(type) {
     try {
       await this.app.resources.createResource({type, title, extension, mimeType, parentID, accessLevel, file});
       
-      this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form. NOT WORKING TODO: Fix
+      await this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form.
+      return;
     }
     catch (e) {
       console.error("Error creating resource:", e);
@@ -397,6 +407,7 @@ updateResourceInput(type) {
     }
   }
 
+  // Handling for downloading a specified resource
   async downloadResource(resourceID) {
     try {
       await this.app.resources.downloadResource(resourceID);
@@ -407,16 +418,21 @@ updateResourceInput(type) {
     }
   }
 
+  // Handling for editing a resource
   async editResource(resourceID, resourceUploaderID) {
+    // Permission check
     if (resourceUploaderID !== this.user.user_id && !this.user.isAdmin) {
       alert("You do not have permission to edit this resource. Only the uploader or an admin can edit it.");
       return;
     }
 
+    // Get new resource information with prompts (temp back-end solution)
     const newTitle = prompt("Enter the new title for the resource (leave blank to keep current title):");
-    const roles = ['student', 'ranger', 'admin', '']; // Include empty string to allow keeping current access level
+    // Valid roles - includes empty string to allow keeping current access level
+    const roles = ['student', 'ranger', 'admin', '']; 
     let newAccessLevel = prompt("Enter the new access level for the resource (student, ranger, admin) or leave blank to keep current level:").toLowerCase();
 
+    // Ensure entered role is a valid role (won't be needed if UI is replaced with drop-down, this is only present due to typing the role)
     while (!roles.includes(newAccessLevel)) {
       newAccessLevel = prompt("Invalid access level. Please enter a valid access level (student, ranger, admin) or leave blank to keep current level:").toLowerCase();
     }
@@ -430,12 +446,15 @@ updateResourceInput(type) {
     }
   }
 
+  // Handling for deleting a resource
   async deleteResource(resourceID, resourceUploaderID) {
+    // Check the user has permission for deletion of this resource
     if (resourceUploaderID !== this.user.user_id && !this.user.isAdmin) {
       alert("You do not have permission to delete this resource. Only the uploader or an admin can delete it.");
       return;
     }
 
+    // Confirmation
     const confirmDelete = confirm("Are you sure you want to delete this resource? This action cannot be undone.");
     if (!confirmDelete) {
       return; // User cancelled the deletion
@@ -450,5 +469,11 @@ updateResourceInput(type) {
         alert("The resource could not be deleted, please try again. If the error persists, please contact a system administrator.");
       }
     }
+  }
+
+  // Functionality for sharing resources with URL
+  async shareResourceURL(resourceID, resourceTitle) {
+    // Copies URL to clipboard
+    return await this.app.resources.copyShareURL(resourceID, resourceTitle);
   }
 }

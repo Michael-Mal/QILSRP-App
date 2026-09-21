@@ -13,14 +13,37 @@ export default class ResourceController {
   async getResource(resourceID)
   {
     const resource =  await this.api.get(`/resource/${resourceID}`, {auth: true});
-    return new Resource(resource)
+    return new Resource(resource);
   }
 
+  /**
+   * Temp and not great function to check if provided access parameters would give access to a resource
+   * @param {*} resourceID 
+   * @param {*} userLevel 
+   * @param {*} cohort 
+   * @returns 
+   */
+  checkAccess(resourceID, userLevel, cohort = 'null')
+  {
+    // Override for admins, always have access
+    if(userLevel.toLowerCase() === 'admin') { return true; }
+
+    const resource = this.getResource(resourceID);
+
+    const hasLevel = (resource.accessLevel === 'student') || (resource.accessLevel === 'ranger' && userLevel === 'ranger');
+
+    return hasLevel;
+  }
+
+  /**
+   * Downloads a resource from S3, currently does this by opening the pre-signed URL in a new tab, allowing the user to download it from there
+   * @param {*} resourceID 
+   */
   async downloadResource(resourceID) {
     try {
       const response = await this.api.get(`/resource/${resourceID}/download`, { auth: true });
+
       const downloadURL = response.downloadURL;
-      
       const downloadResponse = await fetch(downloadURL, {
         method: 'GET'
       });
@@ -33,7 +56,6 @@ export default class ResourceController {
     }
     catch (e) {
       console.error("Error downloading resource:", e);
-      throw e;
     }
   }
 
@@ -74,7 +96,7 @@ export default class ResourceController {
 
       console.log(`File uploaded successfully to S3 for resource ID: ${resourceID}`);
       await this.completeResource(resourceID);
-      this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form
+      return;
     }
     catch (e) {
       console.error("Error creating resource:", e);
@@ -107,6 +129,19 @@ export default class ResourceController {
    * @returns 
    */
   async deleteResource(resourceID) {
-    return await this.api.delete(`/resource/${resourceID}/delete`, { auth: true });
+    return await this.api.delete(`/resource/${resourceID}/delete`, {}, { auth: true });
+  }
+
+/**
+ * Gets a shareable URL for the resource, copying it to the users keyboard. Relies on the window being associated with the domain, so old links will break in the event the domain changes.
+ * People that recieve the URL still need to log in and have appropriate access to download the resource.
+ * @param {*} resourceID - ID of the resource to generate a URL for
+ * @param {*} resourceTitle 
+ * @returns 
+ */
+  async copyShareURL(resourceID, resourceTitle = '') {
+    const shareURL = `${window.location.origin}/resource/share/${resourceID}/${resourceTitle}`;
+
+    return await navigator.clipboard.writeText(shareURL);
   }
 }

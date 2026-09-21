@@ -72,6 +72,7 @@ router.put('/:resourceID/complete', auth, async (req, res, next) => {
     // Update resource status to 'success' after file upload is complete
     try {
         const result = await req.db.from("resource").where('resource_id', resourceID).update({ status: 'success' });
+        res.status(200).json({ message: "Resource upload flagged as successful", resourceID: resourceID});
     }
     catch (e) {
         console.log(e.message)
@@ -123,7 +124,7 @@ router.put('/:resourceID/edit', auth, getAccessLevel, verifyResourceEditData, as
             title: title || current_resource.title,
             access_level: accessLevel || current_resource.access_level
         });
-        res.json({ message: "Resource updated successfully" });
+        res.status(200).json({ message: "Resource updated successfully" });
     }
     catch (e) {
         console.log(e.message)
@@ -206,7 +207,7 @@ router.get('/:resourceID/download', auth, getAccessLevel, async (req, res, next)
             return;
         }
         if (!req.accessTo.includes(resource.access_level)) {
-            res.status(403).json({ error: true, message: "User does not have access to download this resource"});
+            res.status(403).json({ message: "User does not have access to download this resource"});
             return;
         }
 
@@ -219,7 +220,7 @@ router.get('/:resourceID/download', auth, getAccessLevel, async (req, res, next)
     }
 });
 
-router.delete('/:resourceID/delete', auth, getAccessLevel, async (req, res, next) => {
+router.delete('/:resourceID/delete', auth, getAccessLevel, async (req, res) => {
     const resourceID = Number.parseInt(req.params.resourceID, 10);
     if (Number.isNaN(resourceID))
     {

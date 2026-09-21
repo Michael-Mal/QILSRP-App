@@ -75,6 +75,57 @@ export default class App {
     });
 
     if (this.auth.isAuthenticated) {
+      // Temp handling for paths, added for resource sharing. This handling can be removed if a react router is used for front-end in the future.
+
+      // Get the path the user is trying to access (URL without domain name)
+      const path = window.location.pathname;
+
+      // -------------- Resource Route -------------------
+      if(path.startsWith('/resource/')) {
+        // Gets each element of the path. Will have a blank first element
+        const pathSplit = path.split('/');
+
+        // Share route
+        if(pathSplit[2] === 'share') {
+          const resourceID = Number.parseInt(pathSplit[3]);
+
+          const user = this.auth.currentUser;
+
+          try {
+            
+            if(this.resources.checkAccess(resourceID, user.role, user.cohort)) 
+            {
+              {
+                try {
+                  // Access shared resource, currently just downloads it.
+                  this.resources.downloadResource(resourceID);
+                }
+                catch (e)
+                {
+                  console.error(e);
+                  this.showApp();
+                }
+              }
+            }
+            else {
+              window.alert('You do not have access to this resource');
+              this.showApp()
+            }
+
+          }
+          catch (e)
+          {
+            // Raise alert with error and continue to app
+            window.alert(e);
+            this.showApp();
+          }
+          
+          // Change the URL to /home to avoid re-downloading the resource on refresh.
+          // pushState accomplishes this without reloading the page, and user's can use the back feature of their browser to re-attempt download.
+          window.history.pushState({}, '', '/home')
+        }
+      }
+
       this.showApp();
     }
   }
