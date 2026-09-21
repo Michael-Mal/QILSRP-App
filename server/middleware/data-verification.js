@@ -270,6 +270,7 @@ const verifyResourceEditData = (req, res, next) => {
       return
     }
   }
+}
   
  /* Validates that the cohort in the body of the request is in the correct format
  * @returns An error if the name field is invalid
@@ -387,28 +388,27 @@ const verifyEventData = (req, res, next) => {
  * @returns An error if the format is incorrect or any value is not an integer
  */
 const verifyEventMemberData = (req, res, next) => {
-  const user_ids = req.body
-  const error_message = "Request body invalid: the array of user IDs must be integers"
-  try {
-    if (typeof user_ids[0] != "number") {
-      throw Error(error_message)
+    const user_ids = req.body
+    const error_message = "Request body invalid: the array of user IDs must be integers"
+    try {
+      if (typeof user_ids[0] != "number") {
+        throw Error(error_message)
+
+      }
+      user_ids.forEach(id => {
+        if (typeof id != "number") {
+        throw Error(error_message)
+
+      }
+      });
+      next()
 
     }
-    user_ids.forEach(id => {
-      if (typeof id != "number") {
-      throw Error(error_message)
+    catch (e) {
+      e.status = 400
+      next(e)
 
     }
-    });
-    next()
-
   }
-  catch (e) {
-    e.status = 400
-    next(e)
 
-  }
-}
-}
-
-export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyCohortData, verifyResourceData, verifyResourceEditData, verifyEventData, verifyEventMemberData }
+export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyCohortData, verifyResourceData, verifyResourceEditData, verifyFolderData, verifyEventData, verifyEventMemberData }
