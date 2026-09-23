@@ -7,7 +7,7 @@ const SUPPORTED_ACCESS_LEVELS = ['student', 'ranger', 'admin']
 * Will most likely have several classes extending it for different resource types in the future.
 */
 export default class Resource {
-  constructor({ id, type, title, uploaderID, extension, mimeType, parentID, accessLevel = null, creationDate = null } = {}) {
+  constructor({ id, type, title, uploaderID, extension, mimeType, parentID, cohorts = [], accessLevel = null, creationDate = null } = {}) {
     if (!SUPPORTED_TYPES.includes(type.toLowerCase())) {
         throw new Error(`Resource type ${type.toLowerCase()} is not supported`);
     }
@@ -31,6 +31,7 @@ export default class Resource {
     this.extension = extension;
     this.mimeType = mimeType;
     this.parentID = parentID; // ID of the folder this resource resides in.
+    this.cohorts = cohorts;
 
     this.creationDate = creationDate ?? new Date().toISOString();
     // Or implement a separate filtering system with resourceIDs and tags.

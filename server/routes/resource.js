@@ -10,7 +10,7 @@ const router = express.Router()
  */
 router.post('/create', auth, verifyResourceData, getAccessLevel, async (req, res, next) => {
     // Recieve metadata after verification
-    const { type, title, extension, mimeType, parentID, accessLevel } = req.body;
+    const { type, title, extension, mimeType, parentID, cohorts, accessLevel } = req.body;
 
     let currentDate = new Date();
 
@@ -23,8 +23,14 @@ router.post('/create', auth, verifyResourceData, getAccessLevel, async (req, res
     }
 
     // Verify the user isn't attempting to give the resource an accessLevel higher than their own
-    if (!req.accessTo.includes(req.body.accessLevel)) {
+    if (!req.accessTo.includes(accessLevel)) {
         res.status(403).json({ error: true, message: "User does not have permission to add resource with specified access level" });
+        return;
+    }
+
+    if (req.role !== 'admin' && (cohorts.length === 0 || cohorts.some(cohort => cohort !== req.cohort)))
+    {
+        res.status(403).json({ error: true, message: "User does not have permission to add a resource to a cohort they are not in."})
         return;
     }
 
@@ -40,6 +46,7 @@ router.post('/create', auth, verifyResourceData, getAccessLevel, async (req, res
             extension: extension,
             mime_type: mimeType,
             parent_id: parentID,
+            cohorts: JSON.stringify(cohorts),
             access_level: accessLevel.toLowerCase(), // Ensure access level is stored in lowercase for consistency
             status: 'pending', // New resources are pending until the file is uploaded and verified TODO: Add handling for when files fail to upload or are rejected.
             created: currentDate.toISOString().slice(0, 19).replace('T', ' '), // Convert time to MySQL DATETIME format
@@ -94,9 +101,11 @@ router.put('/:resourceID/edit', auth, getAccessLevel, verifyResourceEditData, as
         return;
     }
 
+    const { title, cohorts, accessLevel } = req.body;
+
     console.log('Attempting to edit resource with ID:', resourceID);
 
-    const fields = ['title', 'access_level', 'uploader_id'];
+    const fields = ['title', 'cohorts', 'access_level', 'uploader_id'];
 
     const current_resource = await req.db.from("resource").select(fields).where('resource_id', resourceID).first();
 
@@ -107,8 +116,15 @@ router.put('/:resourceID/edit', auth, getAccessLevel, verifyResourceEditData, as
     }
 
     // Verify the user isn't attempting to give the resource an accessLevel higher than their own
-    if (req.body.accessLevel && !req.accessTo.includes(req.body.accessLevel)) {
+    if (accessLevel && !req.accessTo.includes(accessLevel)) {
         res.status(403).json({ error: true, message: "User does not have permission to update resource with specified access level" });
+        return;
+    }
+
+    // If the user is editing cohorts, verify they aren't trying to give it cohorts they don't have permission to give it to.
+    if (cohorts && (req.role !== 'admin' && (cohorts.length === 0 || cohorts.some(cohort => cohort !== req.cohort))))
+    {
+        res.status(403).json({ error: true, message: "User does not have permission to add edit  a resource to include a cohort they are not in."})
         return;
     }
 
@@ -119,9 +135,9 @@ router.put('/:resourceID/edit', auth, getAccessLevel, verifyResourceEditData, as
 
     // Update resource information
     try {
-        const { title, accessLevel } = req.body;
         const result = await req.db.from("resource").where('resource_id', resourceID).update({
             title: title || current_resource.title,
+            cohorts: JSON.stringify(cohorts) || current_resource.cohorts,
             access_level: accessLevel || current_resource.access_level
         });
         res.status(200).json({ message: "Resource updated successfully" });
@@ -146,7 +162,7 @@ router.get('/:resourceID', auth, getAccessLevel, (req, res, next) => {
         return;
     }
 
-    let fields = ['type', 'title', 'uploader_id', 'extension', 'mime_type', 'parent_id', 'access_level', 'created']
+    let fields = ['type', 'title', 'uploader_id', 'extension', 'mime_type', 'parent_id', 'cohorts', 'access_level', 'created']
 
     let accessTo = req.accessTo;
 
@@ -163,6 +179,11 @@ router.get('/:resourceID', auth, getAccessLevel, (req, res, next) => {
             res.status(403).json({ error: true, message: "User does not have access to view this resource"});
             return;
         }
+        if (!(req.role === 'admin' || resource.cohorts.includes(req.cohort)))
+        {
+            res.status(403).json({ error: true, message: "User's cohort does not have access to view this resource"})
+            return;
+        }
 
         const data = {
             id: resourceID,
@@ -172,6 +193,7 @@ router.get('/:resourceID', auth, getAccessLevel, (req, res, next) => {
             extension: resource.extension,
             mimeType: resource.mime_type,
             parentID: resource.parent_id,
+            cohorts: resource.cohorts,
             accessLevel: resource.access_level,
             created: resource.created
         }
@@ -210,6 +232,11 @@ router.get('/:resourceID/download', auth, getAccessLevel, async (req, res, next)
             res.status(403).json({ message: "User does not have access to download this resource"});
             return;
         }
+        if (!(req.role === 'admin' || resource.cohorts.includes(req.cohort)))
+        {
+            res.status(403).json({ error: true, message: "User's cohort does not have access to download this resource"})
+            return;
+        }
 
         // Generate presigned download URL
         const downloadURL = await generateDownloadURL(`resource-hub/${resourceID}`, resource.title, resource.extension, resource.mime_type);
@@ -231,15 +258,31 @@ router.delete('/:resourceID/delete', auth, getAccessLevel, async (req, res) => {
         return;
     }
 
+    // Check if user is admin (admins can bypass the check for if the resource is owned by the user)
+    const adminBypass = req.role === 'admin'
+
     console.log('Attempting to delete resource with ID:', resourceID);
 
     try {
-        // Check user has permission to delete resource, then delete from SQL table
-        const response = await req.db.from("resource").where('resource_id', resourceID)
-        .andWhere(function () {
-            this.where('uploader_id', req.user_id).orWhereIn('access_level', req.accessTo);
-        })
-        .del();
+        let query = req.db("resource").where('resource_id', resourceID);
+
+        // If not an admin, make sure user is the uploader
+        if (!adminBypass)
+        {
+            query = query.andWhere('uploader_id', req.user_id);
+        }
+
+        // attempt delete
+        const deletedRows = await query.del();
+
+        // Throw error if nothing was deleted
+        if (deletedRows === 0) {
+            res.status(404).json({
+                error: true,
+                message: "Resource not found or user does not have permission to delete it"
+            });
+            return;
+        }
 
         await deleteResourceFromS3(`resource-hub/${resourceID}`); // Delete associated resource from S3 bucket
         res.json({ message: "Resource deleted successfully" });

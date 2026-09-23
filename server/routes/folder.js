@@ -1,5 +1,5 @@
 import express from 'express'
-import { auth, getAccessLevel } from '../middleware/authorisation.js'
+import { auth, verifyAdmin, getAccessLevel } from '../middleware/authorisation.js'
 import { verifyFolderData } from '../middleware/data-verification.js'
 
 const router = express.Router();
@@ -8,7 +8,7 @@ const router = express.Router();
  * The endpoint at which a new folder can be added
  */
 router.post('/create', auth, verifyFolderData, (req, res, next) => {
-    const { name, parentID, accessLevel } = req.body;
+    const { name, parentID, cohorts, accessLevel } = req.body;
 
     let currentDate = new Date();
 
@@ -20,10 +20,20 @@ router.post('/create', auth, verifyFolderData, (req, res, next) => {
         return;
     }
 
+    // Check the user isn't trying to create a folder they shouldn't (visible to other cohorts or no cohort)
+    if(req.role !== 'admin' && (cohorts.length === 0 || cohorts.some(cohort => cohort !== req.cohort)))
+    {
+        res.status(403).json({
+            error: true,
+            message: "User does not have permission to create a folder for a different cohort"
+        })
+    }
+
     req.db.from("folder").insert({
         folder_id: null,
         name: name,
         parent_id: parentID,
+        cohorts: JSON.stringify(cohorts),
         access_level: accessLevel,
         created: currentDate.toISOString().slice(0, 19).replace('T', ' '), // Convert time to MySQL DATETIME format
     })
@@ -52,7 +62,7 @@ router.get('/:folderID', auth, getAccessLevel, async (req, res, next) => {
 
     const accessTo = req.accessTo;
 
-    const fields = ['folder_id', 'name', 'parent_id', 'access_level', 'created'];
+    const fields = ['folder_id', 'name', 'parent_id', 'cohorts', 'access_level', 'created'];
 
     try {
         const folder = await req.db.from("folder").select(fields).where('folder_id', folderID).first()
@@ -63,6 +73,12 @@ router.get('/:folderID', auth, getAccessLevel, async (req, res, next) => {
         }
         if (!accessTo.includes(folder.access_level)) {
             res.status(403).json({ error: true, message: "User does not have access to view this folder"});
+            return;
+        }
+        // Checks if the user has access to the folder, if the parent_id is null, this is the root folder so allow access
+        if (!(folder.parent_id === null || req.role === 'admin' || folder.cohorts.includes(req.cohort)))
+        {
+            res.status(403).json({ error: true, message: "User's cohort does not have access to view this folder"})
             return;
         }
 
@@ -92,6 +108,7 @@ router.get('/:folderID', auth, getAccessLevel, async (req, res, next) => {
             id: folderID,
             name: folder.name,
             parentID: folder.parent_id,
+            cohorts: folder.cohorts,
             accessLevel: folder.access_level,
             created: folder.created,
             path
@@ -123,7 +140,8 @@ router.get('/:folderID/contents', auth, getAccessLevel, async (req, res, next) =
     const accessTo = req.accessTo;
 
     try {
-        const folder = await req.db.from("folder").select("access_level").where("folder_id", folderID).first()
+        const fields = ['access_level', 'cohorts', 'parent_id']
+        const folder = await req.db.from("folder").select(fields).where("folder_id", folderID).first()
         if (!folder) {
             res.status(404).json({ error: true, message: "Folder not found" });
             return;
@@ -132,26 +150,39 @@ router.get('/:folderID/contents', auth, getAccessLevel, async (req, res, next) =
             res.status(403).json({ error: true, message: "User does not have access to view this folder"});
             return;
         }
+        // Checks if the user has access to the folder, if the parent_id is null, this is the root folder so allow access
+        if (!(folder.parent_id === null || req.role === 'admin' || folder.cohorts.includes(req.cohort)))
+        {
+            res.status(403).json({ error: true, message: "User's cohort does not have access to view this folder"})
+            return;
+        }
     
         const resourceRows = await req.db.from("resource").select("*").where("parent_id", folderID).whereIn("access_level", accessTo);
 
-        const resources = resourceRows.map(resource => ({
+        const resources = resourceRows.filter(resource =>
+            req.role === 'admin' || resource.cohorts.includes(req.cohort)
+        ).map(resource => ({
             id: resource.resource_id,
             type: resource.type,
             title: resource.title,
             uploaderID: resource.uploader_id,
             fileRef: resource.file_ref,
             parentID: resource.parent_id,
+            cohorts: resource.cohorts,
             accessLevel: resource.access_level,
             created: resource.created
         }))
 
         const folderRows = await req.db.from("folder").select("*").where("parent_id", folderID).whereIn("access_level", accessTo);
+        
 
-        const folders = folderRows.map(folder => ({
+        const folders = folderRows.filter(folder =>
+            req.role === 'admin' || folder.cohorts.includes(req.cohort)
+        ).map(folder => ({
             id: folder.folder_id,
             name: folder.name,
             parentID: folder.parent_id,
+            cohorts: folder.cohorts,
             accessLevel: folder.access_level,
             created: folder.created
         }));
@@ -174,10 +205,11 @@ router.put('/:folderID/edit', auth, getAccessLevel, async (req, res, next) => {
         });
         return;
     }
+    const { name, cohorts, accessLevel } = req.body;
 
     console.log('Attempting to edit folder with ID:', folderID);
 
-    const fields = ['name', 'access_level'];
+    const fields = ['name', 'cohorts', 'access_level'];
 
     const current_folder = await req.db.from("folder").select(fields).where('folder_id', folderID).first();
 
@@ -188,7 +220,7 @@ router.put('/:folderID/edit', auth, getAccessLevel, async (req, res, next) => {
     }
 
     // Verify the user isn't attempting to give the folder an accessLevel higher than their own
-    if (req.body.accessLevel && !req.accessTo.includes(req.body.accessLevel)) {
+    if (accessLevel && !req.accessTo.includes(accessLevel)) {
         res.status(403).json({ error: true, message: "User does not have permission to update folder to specified access level" });
         return;
     }
@@ -199,11 +231,17 @@ router.put('/:folderID/edit', auth, getAccessLevel, async (req, res, next) => {
         return;
     }
 
+    if (req.role !== 'admin' && (cohorts.length === 0 || cohorts.some(cohort => cohort !== req.cohort)))
+    {
+        res.status(403).json({ error: true, message: "User does not have permission to edit a folder to include a cohort they are not in."})
+        return;
+    }
+
     // Update folder information
     try {
-        const { name, accessLevel } = req.body;
         const result = await req.db.from("folder").where('folder_id', folderID).update({
             name: name || current_folder.title,
+            cohorts: JSON.stringify(cohorts) || current_folder.cohorts,
             access_level: accessLevel || current_folder.access_level
         });
         res.json({ message: "Resource updated successfully" });
@@ -214,7 +252,7 @@ router.put('/:folderID/edit', auth, getAccessLevel, async (req, res, next) => {
     }
 });
 
-router.delete('/:folderID/delete', auth, getAccessLevel, async (req, res, next) => {
+router.delete('/:folderID/delete', auth, verifyAdmin, getAccessLevel, async (req, res, next) => {
      const folderID = Number.parseInt(req.params.folderID, 10);
     if (Number.isNaN(folderID))
     {
@@ -225,12 +263,20 @@ router.delete('/:folderID/delete', auth, getAccessLevel, async (req, res, next) 
         return;
     }
 
+    // Check if user is admin (only admins can delete folders at this time)
+    if(!req.accessTo.includes('admin'))
+    {
+        res.status(403).json({ error: true, message: "User does not have permission to delete this folder" });
+        return;
+    }
+
     console.log('Attempting to delete folder with ID:', folderID);
 
     try {
         // Check user has permission to delete folder, then delete from SQL table
         const response = await req.db.from("folder").where('folder_id', folderID)
         .andWhere(function () {
+            // Extra access check. This is where uploader or cohort checks could be added in the future, if non-admins are to be allowed to delete folders.
             this.whereIn('access_level', req.accessTo);
         })
         .del();

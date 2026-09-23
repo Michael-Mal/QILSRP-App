@@ -59,19 +59,19 @@ export default class FolderController {
      * @param {string} accessLevel - accessLevel of the folder, either 'student', 'ranger' or 'admin'. Defaults to 'student'
      * @returns 
      */
-    async createFolder({ name, parentID, accessLevel = 'student'} )
+    async createFolder({ name, parentID, cohorts, accessLevel = 'student'} )
     {
-        return this.api.post(`/folder/create`, { name, parentID, accessLevel }, { auth: true });
+        return this.api.post(`/folder/create`, { name, parentID, cohorts, accessLevel }, { auth: true });
     }
 
-    async editFolder(folderID, { name, accessLevel })
+    async editFolder(folderID, { name, cohorts, accessLevel })
     {
-        return this.api.put(`/folder/${folderID}/edit`, {name, accessLevel}, {auth: true});
+        return this.api.put(`/folder/${folderID}/edit`, {name, cohorts, accessLevel}, {auth: true});
     }
 
     async deleteFolder(folderID)
     {
-        return this.api.delete(`/folder/${folderID}/delete`, {auth: true})
+        return this.api.delete(`/folder/${folderID}/delete`, {}, {auth: true})
     }
     
 }

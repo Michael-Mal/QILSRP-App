@@ -13,7 +13,7 @@ export default class ResourceController {
   async getResource(resourceID)
   {
     const resource =  await this.api.get(`/resource/${resourceID}`, {auth: true});
-    return new Resource(resource);
+    return resource.map(row => new Resource(row));
   }
 
   /**
@@ -64,9 +64,9 @@ export default class ResourceController {
    * @param {*} param0 - Object contiaing relevant Resource Info
    * @returns The presigned URL for uploading the resource file and the ID of the newly created resource in the database
    */
-  async createResource({type, title, extension, mimeType, parentID, accessLevel, file}) {
+  async createResource({type, title, extension, mimeType, parentID, cohorts, accessLevel, file}) {
     try {
-      const response = await this.api.post('/resource/create', { type, title, extension, mimeType, parentID, accessLevel }, { auth: true });
+      const response = await this.api.post('/resource/create', { type, title, extension, mimeType, parentID, cohorts, accessLevel }, { auth: true });
       const uploadURL = response.uploadURL;
       const resourceID = response.resourceID;
 
@@ -119,8 +119,8 @@ export default class ResourceController {
    * @param {*} param1 - Object containing the new title and/or accessLevel for the resource. If a field is not provided, it will not be changed.
    * @returns 
    */
-  async editResource(resourceID, { title, accessLevel }) {
-    return await this.api.put(`/resource/${resourceID}/edit`, { title, accessLevel }, { auth: true });
+  async editResource(resourceID, { title, cohorts, accessLevel }) {
+    return await this.api.put(`/resource/${resourceID}/edit`, { title, cohorts, accessLevel }, { auth: true });
   }
 
   /**

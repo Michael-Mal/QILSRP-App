@@ -47,6 +47,10 @@ export default class ResourcesView {
               <option>Admin</option>
             </select>
 
+            <label>Cohorts that can access</label>
+            <select id="res-cohorts" name="cohorts" multiple size="4">
+            </select>
+
             <input type="submit" value="Add Resource"/>
           </form>
         </div>
@@ -76,6 +80,10 @@ export default class ResourcesView {
               <option>Admin</option>
             </select>
 
+            <label>Cohorts that can access</label>
+            <select id="folder-cohorts" name="cohorts" multiple size="4">
+            </select>
+
             <input type="submit" value="Add Folder"/>
           </form>
         </div>
@@ -96,36 +104,61 @@ export default class ResourcesView {
 
     // Form submission handling
     if (canAdd) {
+      // ---------------------------- Resource form ----------------------------
+      // Populate cohorts list
+      const resourceCohorts = this.container.querySelector('#res-cohorts');
+      this.populateCohorts(resourceCohorts);
+
       const resourceForm = this.container.querySelector('#res-form');
+
+      // Form submission handling to create a new resource
       resourceForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const file = this.container.querySelector('#res-file').files[0];
+        // const file = this.container.querySelector('#res-file').files[0];
+
+        const formData = new FormData(resourceForm);
+
+        const file = formData.get('file');
         const mimeType = file.type; // Get the MIME type of the selected file
 
-        let title = this.container.querySelector('#res-title').value.trim();
+        let title = formData.get('title').trim();
         if (title === '') {
           // If title is empty, use the file name (without extension) as the title.
           title = file.name.replace(/\.[^/.]+$/, ""); // Remove the extension from the file name, works with files with multiple dots in the name as well;
         }
-        const type = this.container.querySelector('#res-type').value.toLowerCase();
+        const type = formData.get('type').toLowerCase();
         const parentID = this.currentFolderID;
-        const accessLevel = this.container.querySelector('#res-access').value.toLowerCase();
+        const accessLevel = formData.get('access').toLowerCase();
+
+        const cohorts = formData.getAll('cohorts');
 
 
         const extension = file.name.split('.').pop(); // Get the file extension from the selected file
 
-        this.createNewResource({ title, type, extension, mimeType, parentID, accessLevel, file });
+        this.createNewResource({ title, type, extension, mimeType, parentID, cohorts, accessLevel, file });
       });
+
+      // ---------------------------- Folder form -------------------------------
+
+      // Populate cohorts list with recognised cohorts
+      const folderCohorts = this.container.querySelector('#folder-cohorts');
+
+      this.populateCohorts(folderCohorts);
 
       const folderForm = this.container.querySelector('#folder-form');
       folderForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const name = this.container.querySelector('#folder-name').value;
+
+        const formData = new FormData(folderForm);
+
+        const name = formData.get('name');
         const parentID = this.currentFolderID;
-        const accessLevel = this.container.querySelector('#folder-access').value.toLowerCase();
+        const accessLevel = formData.get('access').toLowerCase();
+
+        const cohorts = formData.getAll('cohorts');
 
 
-        this.createNewFolder({ name, parentID, accessLevel });
+        this.createNewFolder({ name, parentID, cohorts, accessLevel });
       });
     }
       
@@ -160,9 +193,10 @@ export default class ResourcesView {
       folders.forEach(folder => {
         html_dynamic += `
         <div class="card">
-          <button data-action="goto-folder" data-id="${folder.id}">📁: ${escapeHtml(folder.name)} | Access level: ${escapeHtml(folder.accessLevel)}</button> &emsp;
+          <button data-action="goto-folder" data-id="${folder.id}">📁: ${escapeHtml(folder.name)}</button> &emsp;
           <button data-action="edit-folder" data-id="${folder.id}">Edit</button>
           <button data-action="delete-folder" data-id="${folder.id}">Delete</button>
+          <p>Access level: ${escapeHtml(folder.accessLevel)} &ensp; | &ensp; Cohorts: ${escapeHtml(folder.cohorts)} </p>
         </div>
       `;
     });
@@ -172,7 +206,8 @@ export default class ResourcesView {
         <div class="card">
           <h3>${escapeHtml(resource.title)}</h3>
           <p>${escapeHtml(resource.type)}</p>
-          <button data-action="download-resource" data-id="${resource.id}">Download</button> | Access level: ${escapeHtml(resource.accessLevel)} | 
+          <p>Access level: ${escapeHtml(resource.accessLevel)} &ensp; | &ensp; Cohorts: ${escapeHtml(resource.cohorts)}</p>
+          <button data-action="download-resource" data-id="${resource.id}">Download</button> | 
           <button data-action="edit-resource" data-id="${resource.id}" data-uploader="${resource.uploaderID}">Edit</button> | 
           <button data-action="delete-resource" data-id="${resource.id}" data-uploader="${resource.uploaderID}">Delete</button> &ensp; | &ensp;
           <button data-action="share-resource" data-id="${resource.id}" data-title="${resource.title}">Copy link</button></p>
@@ -237,8 +272,21 @@ export default class ResourcesView {
   })
 }
 
-// Updates the file input of the resource when the resource type is changed
-updateResourceInput(type) {
+  // ----------------------- Helper functions --------------------------------------------
+
+  // Populate a select field with recognised cohorts
+  async populateCohorts(field) {
+    const allCohorts = await this.app.cohort.list();
+
+    allCohorts.forEach(cohort => {
+      const cohortField = new Option(`${cohort.name} | users: ${cohort.userCount}`, cohort.name);
+
+      field.add(cohortField);
+    })
+  }
+
+  // Updates the file input of the resource when the resource type is changed
+  updateResourceInput(type) {
       const resContainer = this.container.querySelector('#res-input-container');
 
       switch (type) {
@@ -296,8 +344,8 @@ updateResourceInput(type) {
 
   // ----------------------- Folder handling --------------------------------------------
 
-  async createNewFolder({ name, parentID, accessLevel }) {
-    this.app.folders.createFolder({ name, parentID, accessLevel })
+  async createNewFolder({ name, parentID, cohorts, accessLevel }) {
+    this.app.folders.createFolder({ name, parentID, cohorts, accessLevel })
     this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form
   }
 
@@ -314,8 +362,20 @@ updateResourceInput(type) {
     while (!roles.includes(newAccessLevel)) {
       newAccessLevel = prompt("Invalid access level. Please enter a valid access level (student, ranger, admin) or leave blank to keep current level:").toLowerCase();
     }
+
+    const cohortsRaw = await this.app.cohort.list();
+    const cohorts = cohortsRaw.map(cohort => cohort.name);
+
+    let newCohortsRaw = prompt("Enter the new cohorts for the folder, separate each cohort by a comma ',' and optionally a space.");
+    let newCohorts = newCohortsRaw.split(',').map(cohort => cohort.trim());
+    while (!newCohorts.every(cohort => cohorts.includes(cohort)))
+    {
+      newCohortsRaw = prompt("One or more of the cohorts you entered were not recognised, please try again");
+      newCohorts = newCohortsRaw.split(',').map(cohort => cohort.trim());
+    }
+
     try {
-      await this.app.folders.editFolder(folderID, { name: newName || undefined, accessLevel: newAccessLevel || undefined });
+      await this.app.folders.editFolder(folderID, { name: newName || undefined, cohorts: newCohorts || undefined, accessLevel: newAccessLevel || undefined });
       this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form
     }
     catch (e) {
@@ -394,9 +454,9 @@ updateResourceInput(type) {
 
   // ----------------------- Resource handling -------------------------------------------
 
-  async createNewResource({ type, title, extension, mimeType, parentID, accessLevel, file}) {
+  async createNewResource({ type, title, extension, mimeType, parentID, cohorts, accessLevel, file}) {
     try {
-      await this.app.resources.createResource({type, title, extension, mimeType, parentID, accessLevel, file});
+      await this.app.resources.createResource({type, title, extension, mimeType, parentID, cohorts, accessLevel, file});
       
       await this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form.
       return;
@@ -436,8 +496,20 @@ updateResourceInput(type) {
     while (!roles.includes(newAccessLevel)) {
       newAccessLevel = prompt("Invalid access level. Please enter a valid access level (student, ranger, admin) or leave blank to keep current level:").toLowerCase();
     }
+
+    const cohortsRaw = await this.app.cohort.list();
+    const cohorts = cohortsRaw.map(cohort => cohort.name);
+
+    let newCohortsRaw = prompt("Enter the new cohorts for the resource, separate each cohort by a comma ',' and optionally a space.");
+    let newCohorts = newCohortsRaw.split(',').map(cohort => cohort.trim());
+    while (!newCohorts.every(cohort => cohorts.includes(cohort)))
+    {
+      newCohortsRaw = prompt("One or more of the cohorts you entered were not recognised, please try again");
+      newCohorts = newCohortsRaw.split(',').map(cohort => cohort.trim());
+    }
+
     try {
-      await this.app.resources.editResource(resourceID, { title: newTitle || undefined, accessLevel: newAccessLevel || undefined });
+      await this.app.resources.editResource(resourceID, { title: newTitle || undefined, cohorts: newCohorts || undefined, accessLevel: newAccessLevel || undefined });
       this.populateFolderContents(this.currentFolderID); // Repopulate folder with current folder to show updated form
     }
     catch (e) {
