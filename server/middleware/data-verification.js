@@ -49,6 +49,34 @@ const verifyPassword = (password) => {
   }
 }
 
+/**
+ * Normalises phone numbers to be domestic format with no whitepsaces
+ */
+const normaliseMobile = (mobile) => {
+  // Remove all whitespace
+  mobile = mobile.replace(/\s/g, '')
+
+  // Make the number domestic format if it isn't already
+  if (mobile.startsWith("+614")) {
+    mobile = "0" + mobile.substring(3)
+  }
+
+  return mobile;
+}
+
+/**
+ * Verifies an input mobile number to ensure it is a valid australian number. Assumes the mobile number is domestic and contains no whitespace.
+ * @param {} mobile 
+ */
+const verifyMobile = (mobile) => {
+  // Ensure the mobile number begins with 04 (domestic Australian mobile number) and contains 8 additional numbers
+  if (!/^04\d{8}$/.test(mobile)) {
+    let e = Error("Mobile number must be a valid Australian mobile number")
+    e.status = 400
+    throw e
+  }
+}
+
 const roles = ['student', 'ranger', 'admin']
 
 /**
@@ -57,12 +85,13 @@ const roles = ['student', 'ranger', 'admin']
  * @returns An error if any field is null
  */
 const verifyUserData = (req, res, next) => {
-  const { name, email, cohort, role } = req.body ?? {}
+  const { name, email, mobile, cohort, role } = req.body ?? {}
 
   if (req.url == '/register') {
     // Registration has an additional password field
     const password = req.body.password ?? null
 
+    // TODO: Make it so only email OR mobile is required, not both (but both can still be added)
     if (!name || !email || !password || !cohort || !role) {
       let e = Error("Request body incomplete: name, email, password, cohort, and role are required.")
       e.status = 400
@@ -89,6 +118,13 @@ const verifyUserData = (req, res, next) => {
     throw e
 
   }
+
+  console.log(`mobile in: ${mobile}`)
+  const normalisedMobile = normaliseMobile(mobile);
+  console.log(`mobile out: ${normalisedMobile}`)
+  verifyMobile(normalisedMobile)
+  // Update body with the normalised mobile that definitely contains no whitespace and is in domestic format
+  req.body.mobile = normalisedMobile;
 
   if (!roles.includes(role)) {
     let e = Error("Role must be one of 'student', 'ranger', or 'admin'")

@@ -9,7 +9,7 @@ const router = express.Router()
  * The endpoint at which a new user can be registered
  */
 router.post('/register', optionalAuth, verifyUserData, (req, res, next) => {
-  const { name, email, password, cohort, role } = req.body
+  const { name, email, mobile, password, cohort, role } = req.body
 
   // Check if the user is an administrator
   let status = "Pending"
@@ -39,6 +39,7 @@ router.post('/register', optionalAuth, verifyUserData, (req, res, next) => {
         user_id: null,
         name,
         email,
+        mobile,
         password_hash,
         status,
         created: currentDate.toISOString().slice(0, 19).replace('T', ' '),
@@ -82,7 +83,7 @@ router.put('/verify/:email', auth, verifyAdmin, (req, res, next) => {
  * The endpoint at which users can retrieve select user info
  */
 router.get('/', auth, (req, res, next) => {
-  let fields = ['user_id', 'name', 'email', 'role']
+  let fields = ['user_id', 'name', 'email', 'mobile', 'role']
   if (req.role == "admin") {
     fields = fields.concat(['status', 'created', 'cohort'])
   }
@@ -100,6 +101,13 @@ router.get('/', auth, (req, res, next) => {
     .andWhere(function () {
       if (req.query.email != undefined) {
         this.where('email', req.query.email)
+
+      }
+    })
+    .andWhere(function () {
+      if (req.query.mobile != undefined) {
+        console.log(`Searching for mobile: ${req.query.mobile}`)
+        this.where('mobile', req.query.mobile)
 
       }
     })
@@ -151,7 +159,7 @@ router.get('/', auth, (req, res, next) => {
  * The endpoint at which the user or an admin can edit their details
  */
 router.put('/:email', auth, verifyUserData, (req, res, next) => {
-  const { name, email, cohort, role } = req.body
+  const { name, email, mobile, cohort, role } = req.body
 
   // Check if such a user exists
   req.db('user')
@@ -174,7 +182,7 @@ router.put('/:email', auth, verifyUserData, (req, res, next) => {
 
       return req.db('user')
         .where('email', req.params.email)
-        .update({ name, email, cohort, role })
+        .update({ name, email, mobile, cohort, role })
 
     })
     .then(() => {

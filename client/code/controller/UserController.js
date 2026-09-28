@@ -8,7 +8,7 @@ export default class UserController {
     this.api = apiClient;
   }
 
-  async list(name, email, status, cohort, role) {
+  async list(name, email, mobile, status, cohort, role) {
     let searchParams = ''
     let operator = "?";
 
@@ -18,6 +18,10 @@ export default class UserController {
     }
     if (email) {
       searchParams += `${operator}email=${email}`
+      operator = "&"
+    }
+    if (mobile) {
+      searchParams += `${operator}mobile=${mobile}`
       operator = "&"
     }
     if (status) {
@@ -38,7 +42,7 @@ export default class UserController {
   }
 
   async update(email, { name, cohort, role }) {
-    return this.api.put(`/user/${encodeURIComponent(email)}`, { name, email, cohort, role }, { auth: true });
+    return this.api.put(`/user/${encodeURIComponent(email)}`, { name, email, mobile, cohort, role }, { auth: true });
   }
 
   async remove(email) {
