@@ -152,7 +152,129 @@ const verifyUserPasswordData = (req, res, next) => {
 }
 
 /**
- * Validates that the cohort in the body of the request is in the correct format
+ * Validates the format of a resource title, enforcing character restrictions and other rules
+ */
+const verifyResourceTitle = (title) => {
+  if (title.length > 255) {
+    throw new Error("Resource title must not exceed 255 characters")
+  }
+
+  if (title.trim() === "") {
+    throw new Error("Resource title must not be empty")
+  }
+
+  if (/[<>:"/|\\?*]/.test(title)) {
+    throw new Error('Resource title contains invalid characters. Restricted characters: < > : " / | \\ ? *')
+  }
+}
+
+/**
+ * Validates a provided access level, throwing an error if it is not one of the recognised roles
+ * @param {*} accessLevel - Provided access level to check 
+ */
+const verifyValidAccessLevel = (accessLevel) => {
+  if (!roles.includes(accessLevel)) {
+    const errorMessage = "Access level must be one of: " + roles.map(role => `'${role}'`).join(", ")
+    throw new Error(errorMessage)
+  }
+}
+
+/**
+ * Verifies the information provided for a resource being added to the database, throwing an error if some information is invalid.
+ * @returns 
+ */
+const verifyResourceData = (req, res, next) => {
+  const { title, type, extension, mimeType, parentID, accessLevel } = req.body ?? {}
+
+  if (!title || !type || !extension || !mimeType || !parentID || !accessLevel) {
+    res.status(400).json({
+      error: true,
+      message: "Request body incomplete, some required fields are missing. Required fields: title, type, extension, mimeType, parentID, accessLevel"
+    })
+    return
+  }
+
+  try {
+    verifyResourceTitle(title)
+  }
+  catch (e) {
+    res.status(400).json({
+      error: true,
+      message: e.message
+    })
+    return
+  }
+
+  const types = ['video', 'audio', 'image', 'pdf', 'document', 'spreadsheet', 'presentation'];
+
+  if (!types.includes(type.toLowerCase())) {
+    res.status(400).json({
+      error: true,
+      message: "Resource type must be one of 'video', 'audio', 'image', 'pdf', 'document', 'spreadsheet' or 'presentation'"
+    })
+    return
+  }
+
+  // Check if accessLevel is a valid value, currently must be one of the roles
+  try {
+    verifyValidAccessLevel(accessLevel.toLowerCase())
+  }
+  catch (e) {
+    res.status(400).json({
+      error: true,
+      message: e.message
+    })
+    return
+  }
+
+  // TODO: Check mimeType and extension match the type of resource being uploaded
+
+  next()
+}
+
+const verifyResourceEditData = (req, res, next) => {
+  const { title, accessLevel } = req.body ?? {}
+
+  if (!title && !accessLevel) {
+    res.status(400).json({
+      error: true,
+      message: "Request body incomplete, at least one of title or accessLevel must be provided"
+    })
+    return
+  }
+
+  // Check if title is valid, if it is provided
+  if (title) {
+    try {
+      verifyResourceTitle(title)
+    }
+    catch (e) {
+      res.status(400).json({
+        error: true,
+        message: e.message
+      })
+      return
+    }
+  }
+
+  // Check if accessLevel is a valid value, if it is provided. Currently must be one of the roles
+  if (accessLevel) {
+    try {
+      verifyValidAccessLevel(accessLevel.toLowerCase())
+    }
+    catch (e) {
+      res.status(400).json({
+        error: true,
+        message: e.message
+      })
+      return
+    }
+  }
+
+  next()
+}
+  
+ /* Validates that the cohort in the body of the request is in the correct format
  * @returns An error if the name field is invalid
  */
 const verifyCohortData = (req, res, next) => {
@@ -169,7 +291,62 @@ const verifyCohortData = (req, res, next) => {
 }
 
 /**
- * Validates that the event in the body of the request is in the correct format
+ * Validates the format and length of a folders name.
+ * @param {string} name - the name of the folder
+ */
+const verifyFolderName = (name) => {
+  if (name.length > 128) {
+    throw new Error("Folder name must not exceed 128 characters")
+  }
+
+  if (name.trim() === "") {
+    throw new Error("Folder name must not be empty")
+  }
+
+  if (/[<>:"/|\\?*]/.test(name)) {
+    throw new Error('Folder name contains invalid characters. Restricted characters: < > : " / | \\ ? *')
+  }
+}
+
+/**
+ * Validates the information provided for a folder being added to the database, throwing an error if some information is invalid.
+ * @returns an erorr if some information is invalid
+ */
+const verifyFolderData = (req, res, next) => {
+  const { name, parentID, accessLevel} = req.body ?? {}
+
+  // parentID cannot be null for any folder but the root, which has been pre-established in the table.
+  if (!name || !parentID || !accessLevel) {
+    res.status(400).json({
+      error: true,
+      message: "Request body incomplete, some required fields are missing. Required fields: name, parentID, accessLevel"
+    })
+  }
+
+  try {
+    verifyFolderName(name)
+  }
+  catch (e) {
+      res.status(400).json({
+      error: true,
+      message: e.message
+    })
+    return
+  }
+
+  // Check if accessLevel is a valid value, currently must be one of the roles
+  if (!roles.includes(accessLevel)) {
+    res.status(400).json({
+      error: true,
+      message: "Access level must be one of 'student', 'ranger', or 'admin'"
+    })
+    return
+  }
+
+  next()
+}
+  
+/** Validates that the event in the body of the request is in the correct format
  * @returns An error if any field is null or if the date is invalid
  */
 const verifyEventData = (req, res, next) => {
@@ -213,27 +390,27 @@ const verifyEventData = (req, res, next) => {
  * @returns An error if the format is incorrect or any value is not an integer
  */
 const verifyEventMemberData = (req, res, next) => {
-  const user_ids = req.body
-  const error_message = "Request body invalid: the array of user IDs must be integers"
-  try {
-    if (typeof user_ids[0] != "number") {
-      throw Error(error_message)
+    const user_ids = req.body
+    const error_message = "Request body invalid: the array of user IDs must be integers"
+    try {
+      if (typeof user_ids[0] != "number") {
+        throw Error(error_message)
+
+      }
+      user_ids.forEach(id => {
+        if (typeof id != "number") {
+        throw Error(error_message)
+
+      }
+      });
+      next()
 
     }
-    user_ids.forEach(id => {
-      if (typeof id != "number") {
-      throw Error(error_message)
+    catch (e) {
+      e.status = 400
+      next(e)
 
     }
-    });
-    next()
-
   }
-  catch (e) {
-    e.status = 400
-    next(e)
 
-  }
-}
-
-export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyCohortData, verifyEventData, verifyEventMemberData }
+export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyCohortData, verifyResourceData, verifyResourceEditData, verifyFolderData, verifyEventData, verifyEventMemberData }

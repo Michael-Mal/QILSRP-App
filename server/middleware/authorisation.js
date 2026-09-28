@@ -98,4 +98,35 @@ const verifyAdmin = (req, res, next) => {
   next()
 }
 
-export { auth, optionalAuth, verifyAdmin }
+/**
+ * Finds the levels of access the user has and provides a req paramater containing an array of levels the user can access.
+ * Must be called after auth or optinalAuth
+ * @returns 
+ */
+const getAccessLevel = (req, res, next) => {
+  let accessTo = [];
+
+    switch (req.role) {
+        case 'admin':
+            accessTo = ['admin', 'ranger', 'student'];
+            break;
+        case 'ranger':
+            accessTo = ['ranger', 'student'];
+            break;
+        case 'student':
+            accessTo = ['student'];
+            break;
+        default:
+            res.status(403).json({
+                error: true,
+                message: "Current user does not have a recognised role. Accepted roles: 'admin', 'ranger', 'student'"
+            });
+            return;
+    }
+
+    req.accessTo = accessTo;
+
+    next()
+}
+
+export { auth, optionalAuth, verifyAdmin, getAccessLevel }
