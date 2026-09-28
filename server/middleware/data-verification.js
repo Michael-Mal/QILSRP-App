@@ -216,11 +216,29 @@ const verifyValidAccessLevel = (accessLevel) => {
 }
 
 /**
+ * Validates that a list of cohorts are all valid cohorts. Requires a database connection to be passed to obtain existing cohorts.
+ * @param {} cohorts - list of cohorts to validate
+ * @param {*} db  - database connection to find existing cohorts
+ */
+const verifyValidCohorts = async (cohorts, db) => {
+  if (!Array.isArray(cohorts)) {
+    throw new Error("Cohorts must be an array")
+  }
+
+  // Get all cohorts mentioned in the list of cohorts
+  const rows = await db.from("cohort").select("name").whereIn("name", cohorts)
+
+  // If rows are a different length, one or more cohorts were not found.
+  if (rows.length !== cohorts.length) {
+    throw new Error("One or more cohorts specified does not exist")
+  }
+}
+/**
  * Verifies the information provided for a resource being added to the database, throwing an error if some information is invalid.
  * @returns 
  */
 const verifyResourceData = (req, res, next) => {
-  const { title, type, extension, mimeType, parentID, accessLevel } = req.body ?? {}
+  const { title, type, extension, mimeType, parentID, cohorts, accessLevel } = req.body ?? {}
 
   if (!title || !type || !extension || !mimeType || !parentID || !accessLevel) {
     res.status(400).json({
@@ -251,6 +269,19 @@ const verifyResourceData = (req, res, next) => {
     return
   }
 
+  // Check if cohorts exist in the db
+  try {
+    verifyValidCohorts(cohorts, req.db)
+  }
+  catch (e) {
+    res.status(400).json({
+      error: true,
+      message: e.message
+    })
+    return
+  }
+
+
   // Check if accessLevel is a valid value, currently must be one of the roles
   try {
     verifyValidAccessLevel(accessLevel.toLowerCase())
@@ -269,9 +300,9 @@ const verifyResourceData = (req, res, next) => {
 }
 
 const verifyResourceEditData = (req, res, next) => {
-  const { title, accessLevel } = req.body ?? {}
+  const { title, cohorts, accessLevel } = req.body ?? {}
 
-  if (!title && !accessLevel) {
+  if (!title && !cohorts && !accessLevel) {
     res.status(400).json({
       error: true,
       message: "Request body incomplete, at least one of title or accessLevel must be provided"
@@ -297,6 +328,20 @@ const verifyResourceEditData = (req, res, next) => {
   if (accessLevel) {
     try {
       verifyValidAccessLevel(accessLevel.toLowerCase())
+    }
+    catch (e) {
+      res.status(400).json({
+        error: true,
+        message: e.message
+      })
+      return
+    }
+  }
+
+  // Check if provided cohorts are valid, if provided
+  if (cohorts) {
+    try {
+      verifyValidCohorts(cohorts, req.db)
     }
     catch (e) {
       res.status(400).json({
@@ -349,7 +394,7 @@ const verifyFolderName = (name) => {
  * @returns an erorr if some information is invalid
  */
 const verifyFolderData = (req, res, next) => {
-  const { name, parentID, accessLevel} = req.body ?? {}
+  const { name, parentID, cohorts, accessLevel} = req.body ?? {}
 
   // parentID cannot be null for any folder but the root, which has been pre-established in the table.
   if (!name || !parentID || !accessLevel) {
@@ -364,6 +409,18 @@ const verifyFolderData = (req, res, next) => {
   }
   catch (e) {
       res.status(400).json({
+      error: true,
+      message: e.message
+    })
+    return
+  }
+
+  // Check if cohorts exist in the db
+  try {
+    verifyValidCohorts(cohorts, req.db)
+  }
+  catch (e) {
+    res.status(400).json({
       error: true,
       message: e.message
     })
