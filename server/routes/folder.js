@@ -1,6 +1,6 @@
 import express from 'express'
 import { auth, verifyAdmin, getAccessLevel } from '../middleware/authorisation.js'
-import { verifyFolderData } from '../middleware/data-verification.js'
+import { verifyFolderData } from '../middleware/resource-verification.js'
 
 const router = express.Router();
 

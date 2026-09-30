@@ -1,6 +1,6 @@
 import express from 'express'
 import { auth, getAccessLevel } from '../middleware/authorisation.js'
-import { verifyResourceData, verifyResourceEditData } from '../middleware/data-verification.js'
+import { verifyResourceData, verifyResourceEditData } from '../middleware/resource-verification.js'
 import { generateUploadURL, generateDownloadURL, deleteResourceFromS3 } from '../services/s3Service.js'
 
 const router = express.Router()
