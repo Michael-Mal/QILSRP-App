@@ -20,7 +20,7 @@ export default class AdminView {
     }
 
     const [users, cohorts] = await Promise.all([
-      this.app.users.list(this.nameFilter, this.emailFilter, this.statusFilter, this.cohortFilter, this.roleFilter),
+      this.app.users.list(this.nameFilter, this.emailFilter, this.mobileFilter, this.statusFilter, this.cohortFilter, this.roleFilter),
       this.app.cohort.list(),
     ]);
 
@@ -31,6 +31,10 @@ export default class AdminView {
         <h3>Register Ranger</h3>
         <label>Name</label><input type="text" id="admin-reg-name" />
         <label>Email</label><input type="text" id="admin-reg-email" />
+
+        <!-- Mobile field WIP -->
+        <label>Mobile</label><input type="text" id="admin-reg-mobile" /> 
+
         <label>Password</label><input type="password" id="admin-reg-password" />
         <label>Cohort</label><input type="text" id="admin-reg-cohort" />
         <label>Role</label><input type="text" id="admin-reg-role" />
@@ -42,16 +46,21 @@ export default class AdminView {
         <h3>Users</h3>
         <label>Name</label><input type="text" id="admin-fil-name" />
         <label>Email</label><input type="text" id="admin-fil-email" />
+        <label>Mobile</label><input type="text" id="admin-fil-mobile" />
         <label>Status</label><input type="text" id="admin-fil-status" />
         <label>Cohort</label><input type="text" id="admin-fil-cohort" />
         <label>Role</label><input type="text" id="admin-fil-role" />
         <button data-action="filter">Filter</button>
         <table>
-          <thead><tr><th>Email</th><th>Name</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
+          <thead><tr><th>Contact</th><th>Name</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
           <tbody>
             ${users.map(u => `
               <tr data-id="${escapeHtml(u.user_id)}">
-                <td>${escapeHtml(u.email)}</td>
+                <td>
+                <!-- Mobile display WIP -->
+                ${escapeHtml(u.email)} <br> 
+                ${escapeHtml(u.mobile)} 
+                </td>
                 <td>${escapeHtml(u.name)}</td>
                 <td>${escapeHtml(u.status || '-')}</td>
                 <td>${escapeHtml(u.created || '-')}</td>
@@ -104,6 +113,7 @@ export default class AdminView {
   async registerUser() {
     const name = this.container.querySelector('#admin-reg-name').value.trim();
     const email = this.container.querySelector('#admin-reg-email').value.trim();
+    const mobile = this.container.querySelector('#admin-reg-mobile').value.trim(); // mobile field WIP
     const password = this.container.querySelector('#admin-reg-password').value.trim();
     const cohort = this.container.querySelector('#admin-reg-cohort').value.trim();
     const role = this.container.querySelector('#admin-reg-role').value.trim();
@@ -113,7 +123,7 @@ export default class AdminView {
     if (!name || !email || !password || !cohort || !role ) { alert('Name, email, password, cohort, and role are required.'); return; }
 
     try {
-      await this.app.auth.register({ name, email, password, cohort, role, auth: true });
+      await this.app.auth.register({ name, email, mobile, password, cohort, role, auth: true });
       await this.mount();
     } catch (error) {
       errorEl.textContent = error.message || 'Registration failed.';
@@ -124,6 +134,7 @@ export default class AdminView {
   async filterUsers() {
     this.nameFilter = this.container.querySelector('#admin-fil-name').value.trim();
     this.emailFilter = this.container.querySelector('#admin-fil-email').value.trim();
+    this.mobileFilter = this.container.querySelector('#admin-fil-mobile').value.trim();
     this.statusFilter = this.container.querySelector('#admin-fil-status').value.trim();
     this.cohortFilter = this.container.querySelector('#admin-fil-cohort').value.trim();
     this.roleFilter = this.container.querySelector('#admin-fil-role').value.trim();

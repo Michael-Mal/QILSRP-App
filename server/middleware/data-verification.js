@@ -49,6 +49,34 @@ const verifyPassword = (password) => {
   }
 }
 
+/**
+ * Normalises phone numbers to be domestic format with no whitepsaces
+ */
+const normaliseMobile = (mobile) => {
+  // Remove all whitespace
+  mobile = mobile.replace(/\s/g, '')
+
+  // Make the number domestic format if it isn't already
+  if (mobile.startsWith("+614")) {
+    mobile = "0" + mobile.substring(3)
+  }
+
+  return mobile;
+}
+
+/**
+ * Verifies an input mobile number to ensure it is a valid australian number. Assumes the mobile number is domestic and contains no whitespace.
+ * @param {} mobile 
+ */
+const verifyMobile = (mobile) => {
+  // Ensure the mobile number begins with 04 (domestic Australian mobile number) and contains 8 additional numbers
+  if (!/^04\d{8}$/.test(mobile)) {
+    let e = Error("Mobile number must be a valid Australian mobile number")
+    e.status = 400
+    throw e
+  }
+}
+
 const roles = ['student', 'ranger', 'admin']
 
 /**
@@ -57,12 +85,13 @@ const roles = ['student', 'ranger', 'admin']
  * @returns An error if any field is null
  */
 const verifyUserData = (req, res, next) => {
-  const { name, email, cohort, role } = req.body ?? {}
+  const { name, email, mobile, cohort, role } = req.body ?? {}
 
   if (req.url == '/register') {
     // Registration has an additional password field
     const password = req.body.password ?? null
 
+    // TODO: Make it so only email OR mobile is required, not both (but both can still be added)
     if (!name || !email || !password || !cohort || !role) {
       let e = Error("Request body incomplete: name, email, password, cohort, and role are required.")
       e.status = 400
@@ -89,6 +118,13 @@ const verifyUserData = (req, res, next) => {
     throw e
 
   }
+
+  console.log(`mobile in: ${mobile}`)
+  const normalisedMobile = normaliseMobile(mobile);
+  console.log(`mobile out: ${normalisedMobile}`)
+  verifyMobile(normalisedMobile)
+  // Update body with the normalised mobile that definitely contains no whitespace and is in domestic format
+  req.body.mobile = normalisedMobile;
 
   if (!roles.includes(role)) {
     let e = Error("Role must be one of 'student', 'ranger', or 'admin'")
@@ -180,11 +216,29 @@ const verifyValidAccessLevel = (accessLevel) => {
 }
 
 /**
+ * Validates that a list of cohorts are all valid cohorts. Requires a database connection to be passed to obtain existing cohorts.
+ * @param {} cohorts - list of cohorts to validate
+ * @param {*} db  - database connection to find existing cohorts
+ */
+const verifyValidCohorts = async (cohorts, db) => {
+  if (!Array.isArray(cohorts)) {
+    throw new Error("Cohorts must be an array")
+  }
+
+  // Get all cohorts mentioned in the list of cohorts
+  const rows = await db.from("cohort").select("name").whereIn("name", cohorts)
+
+  // If rows are a different length, one or more cohorts were not found.
+  if (rows.length !== cohorts.length) {
+    throw new Error("One or more cohorts specified does not exist")
+  }
+}
+/**
  * Verifies the information provided for a resource being added to the database, throwing an error if some information is invalid.
  * @returns 
  */
 const verifyResourceData = (req, res, next) => {
-  const { title, type, extension, mimeType, parentID, accessLevel } = req.body ?? {}
+  const { title, type, extension, mimeType, parentID, cohorts, accessLevel } = req.body ?? {}
 
   if (!title || !type || !extension || !mimeType || !parentID || !accessLevel) {
     res.status(400).json({
@@ -215,6 +269,19 @@ const verifyResourceData = (req, res, next) => {
     return
   }
 
+  // Check if cohorts exist in the db
+  try {
+    verifyValidCohorts(cohorts, req.db)
+  }
+  catch (e) {
+    res.status(400).json({
+      error: true,
+      message: e.message
+    })
+    return
+  }
+
+
   // Check if accessLevel is a valid value, currently must be one of the roles
   try {
     verifyValidAccessLevel(accessLevel.toLowerCase())
@@ -233,9 +300,9 @@ const verifyResourceData = (req, res, next) => {
 }
 
 const verifyResourceEditData = (req, res, next) => {
-  const { title, accessLevel } = req.body ?? {}
+  const { title, cohorts, accessLevel } = req.body ?? {}
 
-  if (!title && !accessLevel) {
+  if (!title && !cohorts && !accessLevel) {
     res.status(400).json({
       error: true,
       message: "Request body incomplete, at least one of title or accessLevel must be provided"
@@ -261,6 +328,20 @@ const verifyResourceEditData = (req, res, next) => {
   if (accessLevel) {
     try {
       verifyValidAccessLevel(accessLevel.toLowerCase())
+    }
+    catch (e) {
+      res.status(400).json({
+        error: true,
+        message: e.message
+      })
+      return
+    }
+  }
+
+  // Check if provided cohorts are valid, if provided
+  if (cohorts) {
+    try {
+      verifyValidCohorts(cohorts, req.db)
     }
     catch (e) {
       res.status(400).json({
@@ -313,7 +394,7 @@ const verifyFolderName = (name) => {
  * @returns an erorr if some information is invalid
  */
 const verifyFolderData = (req, res, next) => {
-  const { name, parentID, accessLevel} = req.body ?? {}
+  const { name, parentID, cohorts, accessLevel} = req.body ?? {}
 
   // parentID cannot be null for any folder but the root, which has been pre-established in the table.
   if (!name || !parentID || !accessLevel) {
@@ -328,6 +409,18 @@ const verifyFolderData = (req, res, next) => {
   }
   catch (e) {
       res.status(400).json({
+      error: true,
+      message: e.message
+    })
+    return
+  }
+
+  // Check if cohorts exist in the db
+  try {
+    verifyValidCohorts(cohorts, req.db)
+  }
+  catch (e) {
+    res.status(400).json({
       error: true,
       message: e.message
     })

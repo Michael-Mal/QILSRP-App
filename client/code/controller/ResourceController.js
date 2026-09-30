@@ -28,11 +28,14 @@ export default class ResourceController {
     // Override for admins, always have access
     if(userLevel.toLowerCase() === 'admin') { return true; }
 
-    const resource = this.getResource(resourceID);
+    // Cannot await getting the resource in the current pipeline, so this functionality doesn't work.
+    
+    // const resource = this.getResource(resourceID);
 
-    const hasLevel = (resource.accessLevel === 'student') || (resource.accessLevel === 'ranger' && userLevel === 'ranger');
+    // const hasLevel = (resource.accessLevel === 'student') || (resource.accessLevel === 'ranger' && userLevel === 'ranger');
 
-    return hasLevel;
+    // const inCohort = (resource.cohorts.includes(cohort));
+    return true;
   }
 
   /**

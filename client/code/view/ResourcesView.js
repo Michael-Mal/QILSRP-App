@@ -498,7 +498,8 @@ export default class ResourcesView {
     }
 
     const cohortsRaw = await this.app.cohort.list();
-    const cohorts = cohortsRaw.map(cohort => cohort.name);
+    let cohorts = cohortsRaw.map(cohort => cohort.name);
+    cohorts.push('');
 
     let newCohortsRaw = prompt("Enter the new cohorts for the resource, separate each cohort by a comma ',' and optionally a space.");
     let newCohorts = newCohortsRaw.split(',').map(cohort => cohort.trim());
