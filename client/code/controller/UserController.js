@@ -37,15 +37,15 @@ export default class UserController {
     return rows.map(row => new User(row));
   }
 
-  async update(email, { name, cohort, role }) {
-    return this.api.put(`/user/${encodeURIComponent(email)}`, { name, email, cohort, role }, { auth: true });
+  async update(id, { name, email, cohort, role }) {
+    return this.api.put(`/user/${encodeURIComponent(id)}`, { name, email, cohort, role }, { auth: true });
   }
 
-  async remove(email) {
-    return this.api.delete(`/user/${encodeURIComponent(email)}`, {}, { auth: true });
+  async remove(id) {
+    return this.api.delete(`/user/${encodeURIComponent(id)}`, {}, { auth: true });
   }
 
-  async verify(email) {
-    return this.api.put(`/user/verify/${encodeURIComponent(email)}`, {}, { auth: true })
+  async verify(id) {
+    return this.api.put(`/user/verify/${encodeURIComponent(id)}`, {}, { auth: true })
   }
 }

@@ -50,15 +50,15 @@ export default class AdminView {
           <thead><tr><th>Email</th><th>Name</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
           <tbody>
             ${users.map(u => `
-              <tr data-email="${escapeHtml(u.email)}">
+              <tr data-id="${escapeHtml(u.user_id)}">
                 <td>${escapeHtml(u.email)}</td>
                 <td>${escapeHtml(u.name)}</td>
                 <td>${escapeHtml(u.status || '-')}</td>
                 <td>${escapeHtml(u.created || '-')}</td>
                 <td>
-                  <button data-action="edit-user" data-email="${escapeHtml(u.email)}">Edit</button>
-                  <button data-action="delete-user" data-email="${escapeHtml(u.email)}">Delete</button>
-                  ${u.status == "Pending" ? `<button data-action="verify-user" data-email="${escapeHtml(u.email)}">Verify</button>` : ""}
+                  <button data-action="edit-user" data-id="${escapeHtml(u.user_id)}">Edit</button>
+                  <button data-action="delete-user" data-id="${escapeHtml(u.user_id)}">Delete</button>
+                  ${u.status == "Pending" ? `<button data-action="verify-user" data-id="${escapeHtml(u.user_id)}">Verify</button>` : ""}
                 </td>
               </tr>
             `).join('')}
@@ -89,15 +89,15 @@ export default class AdminView {
     if (filterBtn) filterBtn.addEventListener('click', () => this.filterUsers());
 
     this.container.querySelectorAll('[data-action="edit-user"]').forEach(button => {
-      button.addEventListener('click', () => this.editUser(button.dataset.email));
+      button.addEventListener('click', () => this.editUser(button.dataset.id));
     });
 
     this.container.querySelectorAll('[data-action="delete-user"]').forEach(button => {
-      button.addEventListener('click', () => this.deleteUser(button.dataset.email));
+      button.addEventListener('click', () => this.deleteUser(button.dataset.id));
     });
 
     this.container.querySelectorAll('[data-action="verify-user"]').forEach(button => {
-      button.addEventListener('click', () => this.verifyUser(button.dataset.email));
+      button.addEventListener('click', () => this.verifyUser(button.dataset.id));
     });
   }
 
@@ -130,27 +130,29 @@ export default class AdminView {
     await this.mount();
   }
 
-  async editUser(email) {
+  async editUser(id) {
     const name = prompt('New name for this user:');
     if (!name) return;
+    const email = prompt('Updated email for this user:');
+    if (!email) return;
     const cohort = prompt('Updated cohort for this user:');
     if (!cohort) return;
     const role = prompt('Updated role for this user:');
     if (!role) return;
 
-    await this.app.users.update(email, { name, cohort, role });
+    await this.app.users.update(id, { name, email, cohort, role });
     await this.mount();
   }
 
-  async deleteUser(email) {
-    if (!confirm(`Delete user ${email}? This cannot be undone.`)) return;
-    await this.app.users.remove(email);
+  async deleteUser(id) {
+    if (!confirm(`Delete user? This cannot be undone.`)) return;
+    await this.app.users.remove(id);
     await this.mount();
   }
 
-  async verifyUser(email) {
-    if (!confirm(`Verfy user ${email}?`)) return;
-    await this.app.users.verify(email);
+  async verifyUser(id) {
+    if (!confirm(`Verfy user?`)) return;
+    await this.app.users.verify(id);
     await this.mount();
   }
 }

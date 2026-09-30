@@ -679,7 +679,7 @@
         }
       }
     },
-    "/user/verify/{email}": {
+    "/user/verify/{id}": {
       "put": {
         "description": "Verify the specified pending user as an admin.",
         "tags": [
@@ -687,12 +687,12 @@
         ],
         "parameters": [
           {
-            "name": "email",
+            "name": "id",
             "in": "path",
-            "description": "The email of the user",
+            "description": "The id of the user",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -712,7 +712,7 @@
                     "message": {
                       "type": "string",
                       "examples": [
-                        "User with email ranger0@email.com has been verified"
+                        "User has been verified"
                       ]
                     }
                   }
@@ -1040,7 +1040,7 @@
         }
       }
     },
-    "/user/{email}": {
+    "/user/{id}": {
       "put": {
         "description": "Provide the current user's profile information (in the body of the request)",
         "tags": [
@@ -1048,12 +1048,12 @@
         ],
         "parameters": [
           {
-            "name": "email",
+            "name": "id",
             "in": "path",
-            "description": "The email of the user",
+            "description": "The id of the user",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -1401,12 +1401,12 @@
         ],
         "parameters": [
           {
-            "name": "email",
+            "name": "id",
             "in": "path",
-            "description": "The email of the user",
+            "description": "The id of the user",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "integer"
             }
           }
         ],
@@ -1426,7 +1426,7 @@
                     "message": {
                       "type": "string",
                       "examples": [
-                        "User with email ranger0@email.com has been deleted"
+                        "User has been deleted"
                       ]
                     }
                   }

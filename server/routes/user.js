@@ -57,11 +57,11 @@ router.post('/register', optionalAuth, verifyUserData, (req, res, next) => {
 /**
  * The endpoint at which a pending user can be verified by an admin
  */
-router.put('/verify/:email', auth, verifyAdmin, (req, res, next) => {
+router.put('/verify/:id', auth, verifyAdmin, (req, res, next) => {
 
   req.db.from("user")
     .select("status")
-    .where({ email: req.params.email, status: "Pending" })
+    .where({ user_id: req.params.id, status: "Pending" })
     .update('status', 'Active')
     .then(result => {
 
@@ -72,7 +72,7 @@ router.put('/verify/:email', auth, verifyAdmin, (req, res, next) => {
 
       }
 
-      res.json({ message: `User with email ${req.params.email} has been verified` })
+      res.json({ message: `User has been verified` })
     
     })
     .catch(e => next(e))
@@ -150,13 +150,13 @@ router.get('/', auth, (req, res, next) => {
 /**
  * The endpoint at which the user or an admin can edit their details
  */
-router.put('/:email', auth, verifyUserData, (req, res, next) => {
+router.put('/:id', auth, verifyUserData, (req, res, next) => {
   const { name, email, cohort, role } = req.body
 
   // Check if such a user exists
   req.db('user')
     .count('*')
-    .where({ "email": req.params.email })
+    .where({ "user_id": req.params.id })
     .then(count => {
       if (count[0]['count(*)'] != 1) {
         let e = Error("User not found")
@@ -165,7 +165,7 @@ router.put('/:email', auth, verifyUserData, (req, res, next) => {
 
       }
 
-      if (req.email != req.params.email && req.role != "admin") {
+      if (req.user_id != req.params.id && req.role != "admin") {
         let e = Error("Forbidden")
         e.status = 403
         throw e
@@ -173,7 +173,7 @@ router.put('/:email', auth, verifyUserData, (req, res, next) => {
       }
 
       return req.db('user')
-        .where('email', req.params.email)
+        .where('user_id', req.params.id)
         .update({ name, email, cohort, role })
 
     })
@@ -187,8 +187,8 @@ router.put('/:email', auth, verifyUserData, (req, res, next) => {
 /**
  * The endpoint at which the user or an admin can delete their account
  */
-router.delete('/:email', auth, (req, res, next) => {
-  if (req.email != req.params.email && req.role != "admin") {
+router.delete('/:id', auth, (req, res, next) => {
+  if (req.user_id != req.params.id && req.role != "admin") {
     let e = Error("Forbidden")
     e.status = 403
     throw e
@@ -196,7 +196,7 @@ router.delete('/:email', auth, (req, res, next) => {
   }
 
   req.db('user')
-    .where('email', req.params.email)
+    .where('user_id', req.params.id)
     .del()
     .then(count => {
       // Check if such a user exists
@@ -207,7 +207,7 @@ router.delete('/:email', auth, (req, res, next) => {
 
       }
 
-      res.json({ message: `User with email ${req.params.email} has been deleted` })
+      res.json({ message: `User has been deleted` })
 
     })
     .catch(e => next(e))
