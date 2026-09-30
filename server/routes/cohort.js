@@ -14,7 +14,6 @@ router.post('/', auth, verifyAdmin, verifyCohortData, (req, res, next) => {
   // Determine if cohort already exists in table
   req.db.from("cohort").where("name", "=", name)
     .then(cohorts => {
-      console.log(cohorts)
       if (cohorts.length > 0) {
         // If cohort does exist, return error response
         let e = Error("Cohort already exists")

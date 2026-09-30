@@ -91,9 +91,8 @@ const verifyUserData = (req, res, next) => {
     // Registration has an additional password field
     const password = req.body.password ?? null
 
-    // TODO: Make it so only email OR mobile is required, not both (but both can still be added)
-    if (!name || !email || !password || !cohort || !role) {
-      let e = Error("Request body incomplete: name, email, password, cohort, and role are required.")
+    if (!name || !password || !cohort || !role) {
+      let e = Error("Request body incomplete: name, password, cohort, and role are required.")
       e.status = 400
       throw e
 
@@ -104,27 +103,36 @@ const verifyUserData = (req, res, next) => {
   }
   else {
 
-    if (!name || !email || !cohort || !role) {
-      let e = Error("Request body incomplete: name, email, cohort, and role are required.")
+    if (!name || !cohort || !role) {
+      let e = Error("Request body incomplete: name, cohort, and role are required.")
       e.status = 400
       throw e
 
     }
   }
 
-  if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(email)) {
-    let e = Error("Email must be a valid email")
+  if (email) {
+    if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(email)) {
+      let e = Error("Email must be a valid email")
+      e.status = 400
+      throw e
+
+    }
+  }
+
+  if (mobile) {
+    const normalisedMobile = normaliseMobile(mobile);
+    verifyMobile(normalisedMobile)
+    // Update body with the normalised mobile that definitely contains no whitespace and is in domestic format
+    req.body.mobile = normalisedMobile;
+
+  }
+  else if (!email) {
+    let e = Error("Request body incomplete: one of email address or mobile number is required.")
     e.status = 400
     throw e
 
   }
-
-  console.log(`mobile in: ${mobile}`)
-  const normalisedMobile = normaliseMobile(mobile);
-  console.log(`mobile out: ${normalisedMobile}`)
-  verifyMobile(normalisedMobile)
-  // Update body with the normalised mobile that definitely contains no whitespace and is in domestic format
-  req.body.mobile = normalisedMobile;
 
   if (!roles.includes(role)) {
     let e = Error("Role must be one of 'student', 'ranger', or 'admin'")
@@ -354,10 +362,10 @@ const verifyResourceEditData = (req, res, next) => {
 
   next()
 }
-  
- /* Validates that the cohort in the body of the request is in the correct format
- * @returns An error if the name field is invalid
- */
+
+/* Validates that the cohort in the body of the request is in the correct format
+* @returns An error if the name field is invalid
+*/
 const verifyCohortData = (req, res, next) => {
   const { name } = req.body ?? {}
 
@@ -394,7 +402,7 @@ const verifyFolderName = (name) => {
  * @returns an erorr if some information is invalid
  */
 const verifyFolderData = (req, res, next) => {
-  const { name, parentID, cohorts, accessLevel} = req.body ?? {}
+  const { name, parentID, cohorts, accessLevel } = req.body ?? {}
 
   // parentID cannot be null for any folder but the root, which has been pre-established in the table.
   if (!name || !parentID || !accessLevel) {
@@ -408,7 +416,7 @@ const verifyFolderData = (req, res, next) => {
     verifyFolderName(name)
   }
   catch (e) {
-      res.status(400).json({
+    res.status(400).json({
       error: true,
       message: e.message
     })
@@ -438,7 +446,7 @@ const verifyFolderData = (req, res, next) => {
 
   next()
 }
-  
+
 /** Validates that the event in the body of the request is in the correct format
  * @returns An error if any field is null or if the date is invalid
  */
@@ -483,27 +491,27 @@ const verifyEventData = (req, res, next) => {
  * @returns An error if the format is incorrect or any value is not an integer
  */
 const verifyEventMemberData = (req, res, next) => {
-    const user_ids = req.body
-    const error_message = "Request body invalid: the array of user IDs must be integers"
-    try {
-      if (typeof user_ids[0] != "number") {
+  const user_ids = req.body
+  const error_message = "Request body invalid: the array of user IDs must be integers"
+  try {
+    if (typeof user_ids[0] != "number") {
+      throw Error(error_message)
+
+    }
+    user_ids.forEach(id => {
+      if (typeof id != "number") {
         throw Error(error_message)
 
       }
-      user_ids.forEach(id => {
-        if (typeof id != "number") {
-        throw Error(error_message)
+    });
+    next()
 
-      }
-      });
-      next()
-
-    }
-    catch (e) {
-      e.status = 400
-      next(e)
-
-    }
   }
+  catch (e) {
+    e.status = 400
+    next(e)
+
+  }
+}
 
 export { verifyUserLoginData, verifyUserData, verifyUserPasswordData, verifyCohortData, verifyResourceData, verifyResourceEditData, verifyFolderData, verifyEventData, verifyEventMemberData }

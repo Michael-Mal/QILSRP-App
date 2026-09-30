@@ -106,7 +106,6 @@ router.get('/', auth, (req, res, next) => {
     })
     .andWhere(function () {
       if (req.query.mobile != undefined) {
-        console.log(`Searching for mobile: ${req.query.mobile}`)
         this.where('mobile', req.query.mobile)
 
       }

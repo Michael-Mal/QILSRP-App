@@ -120,7 +120,8 @@ export default class AdminView {
     const errorEl = this.container.querySelector('#admin-reg-error');
     errorEl.style.display = 'none';
 
-    if (!name || !email || !password || !cohort || !role ) { alert('Name, email, password, cohort, and role are required.'); return; }
+    if (!name || !password || !cohort || !role) { alert('Name, password, cohort, and role are required.'); return; }
+    if (!email && !mobile) { alert('Email or mobile is required.'); return; }
 
     try {
       await this.app.auth.register({ name, email, mobile, password, cohort, role, auth: true });
@@ -144,14 +145,15 @@ export default class AdminView {
   async editUser(id) {
     const name = prompt('New name for this user:');
     if (!name) return;
-    const email = prompt('Updated email for this user:');
-    if (!email) return;
+    const email = prompt('Updated email for this user (Enter nothing for only mobile):');
+    const mobile = prompt('Updated mobile for this user (Enter nothing for only email):');
+    if (!email && !mobile) return;
     const cohort = prompt('Updated cohort for this user:');
     if (!cohort) return;
     const role = prompt('Updated role for this user:');
     if (!role) return;
 
-    await this.app.users.update(id, { name, email, cohort, role });
+    await this.app.users.update(id, { name, email, mobile, cohort, role });
     await this.mount();
   }
 
