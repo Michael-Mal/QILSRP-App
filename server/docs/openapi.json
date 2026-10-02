@@ -22,26 +22,47 @@
           "Authentication"
         ],
         "requestBody": {
-          "description": "The credentials of the user to log in.",
+          "description": "The credentials of the user to log in. Click on 'Schema' to see all options.",
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "type": "string",
-                    "examples": [
-                      "admin1@email.com"
-                    ]
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "email": {
+                        "type": "string",
+                        "examples": [
+                          "admin1@email.com"
+                        ]
+                      },
+                      "password": {
+                        "type": "string",
+                        "examples": [
+                          "pass"
+                        ]
+                      }
+                    }
                   },
-                  "password": {
-                    "type": "string",
-                    "examples": [
-                      "pass"
-                    ]
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mobile": {
+                        "type": "integer",
+                        "examples": [
+                          412345678
+                        ]
+                      },
+                      "password": {
+                        "type": "string",
+                        "examples": [
+                          "pass"
+                        ]
+                      }
+                    }
                   }
-                }
+                ]
               }
             }
           }
@@ -111,23 +132,46 @@
             "description": "Invalid log in request",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "boolean",
-                      "examples": [
-                        true
-                      ]
-                    },
-                    "message": {
-                      "type": "string",
-                      "examples": [
-                        "Request body incomplete, both email and password are required"
-                      ]
+                "oneOf": [
+                  {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Request body incomplete, password is required"
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "examples": [
+                            true
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "examples": [
+                            "Request body incomplete, one of email or mobile is required"
+                          ]
+                        }
+                      }
                     }
                   }
-                }
+                ]
               }
             }
           },
@@ -147,7 +191,7 @@
                     "message": {
                       "type": "string",
                       "examples": [
-                        "Incorrect email or password"
+                        "Incorrect email/mobile or password"
                       ]
                     }
                   }

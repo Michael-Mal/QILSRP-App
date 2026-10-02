@@ -102,7 +102,8 @@ export default class EventsView {
       })
       let users = null
       if (user.isAdmin) {
-        users = await this.app.users.list(this.nameFilter, this.emailFilter, null, this.cohortFilter, this.roleFilter)
+        // TODO: Add Mobile Filtering
+        users = await this.app.users.list(this.nameFilter, this.emailFilter, null, null, this.cohortFilter, this.roleFilter)
       }
 
       this.container.innerHTML = `

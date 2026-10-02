@@ -16,10 +16,18 @@ export default class AuthController {
     return Boolean(Storage.getToken() && this.currentUser);
   }
 
-  async login(email, password) {
-    const data = await this.api.post('/user/login', { email, password });
-    const user = new User({ user_id: data.user_id, name: data.name, email: data.email, role: data.role, cohort: data.cohort });
-    Storage.setToken(data.token);
+  async login(contact, password) {
+    let data = { password }
+    // Check if the contact is an email
+    if (/@/.test(contact)) {
+      data.email = contact.trim()
+    }
+    else {
+      data.mobile = parseInt(contact)
+    }
+    const response = await this.api.post('/user/login', data);
+    const user = new User({ user_id: response.user_id, name: response.name, email: response.email, role: response.role, cohort: response.cohort });
+    Storage.setToken(response.token);
     Storage.setUser(user);
     this.currentUser = user;
     return user;

@@ -16,14 +16,24 @@ const router = express.Router()
  * The endpoint at which users can log in and retrieve a JWT token
  */
 router.post('/login', verifyUserLoginData, (req, res, next) => {
-  const { email, password } = req.body
+  const { email, mobile, password } = req.body
   let user_id, name, role, status, cohort 
 
   // Determine if user already exists in table
-  req.db.from("user").select("*").where("email", "=", email)
+  req.db.from("user").select("*")
+    .where(function () {
+      if (!mobile) {
+        this.where("email", "=", email)
+
+      }
+      else {
+        this.where("mobile", "=", mobile)
+
+      }
+    })
     .then(users => {
       if (users.length === 0) {
-        let e = Error("Incorrect email or password")
+        let e = Error("Incorrect email/mobile or password")
         e.status = 401;
         throw e
 
@@ -45,7 +55,7 @@ router.post('/login', verifyUserLoginData, (req, res, next) => {
 
       } else {
         // If passwords do not match, return error response
-        let e = Error('Incorrect email or password');
+        let e = Error('Incorrect email/mobile or password');
         e.status = 401;
         throw e
       }
@@ -62,7 +72,7 @@ router.post('/login', verifyUserLoginData, (req, res, next) => {
           expiresIn,
           user_id,
           name,
-          email: email,
+          email,
           role,
           cohort
         })

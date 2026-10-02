@@ -2,7 +2,7 @@ export default class LoginView {
   constructor(container, app) {
     this.container = container;
     this.app = app;
-    this.emailInput = container.querySelector('#login-email');
+    this.contactInput = container.querySelector('#login-contact');
     this.passwordInput = container.querySelector('#login-password');
     this.errorEl = container.querySelector('#login-error');
     this.submitBtn = container.querySelector('#login-submit');
@@ -15,21 +15,21 @@ export default class LoginView {
   }
 
   async submit() {
-    const email = this.emailInput.value.trim();
+    const contact = this.contactInput.value;
     const password = this.passwordInput.value.trim();
     this.errorEl.style.display = 'none';
 
     try {
-      await this.app.auth.login(email, password);
+      await this.app.auth.login(contact, password);
       await this.app.showApp();
     } catch (error) {
-      this.errorEl.textContent = error.message || 'Invalid email or password.';
+      this.errorEl.textContent = error.message || 'Invalid email/mobile or password.';
       this.errorEl.style.display = 'block';
     }
   }
 
   reset() {
-    this.emailInput.value = '';
+    this.contactInput.value = '';
     this.passwordInput.value = '';
     this.errorEl.style.display = 'none';
   }

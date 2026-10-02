@@ -4,10 +4,17 @@
  * @returns An error if either field is null
  */
 const verifyUserLoginData = (req, res, next) => {
-  const { email, password } = req.body ?? {}
+  const { email, mobile, password } = req.body ?? {}
 
-  if (!email || !password) {
-    let e = Error("Request body incomplete, both email and password are required")
+  if (!password) {
+    let e = Error("Request body incomplete, password is required")
+    e.status = 400
+    throw e
+
+  }
+
+  if (!email && !mobile) {
+    let e = Error("Request body incomplete, one of email or mobile is required")
     e.status = 400
     throw e
 
