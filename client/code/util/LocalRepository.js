@@ -2,7 +2,7 @@ import Storage from './Storage.js';
 
 /**
  * Generic browser-persisted collection used by feature controllers that do
- * not yet have a matching server endpoint (cohorts, events, missions, feed,
+ * not yet have a matching server endpoint (cohorts, events,
  * messages, resources). Every method returns a Promise so a controller can
  * be repointed at ApiClient later without changing its public interface or
  * the views that consume it.

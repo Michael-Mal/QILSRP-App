@@ -57,9 +57,8 @@ export default class AdminView {
             ${users.map(u => `
               <tr data-id="${escapeHtml(u.user_id)}">
                 <td>
-                <!-- Mobile display WIP -->
-                ${escapeHtml(u.email)} <br> 
-                ${escapeHtml(u.mobile)} 
+                ${u.email != undefined ? escapeHtml(u.email) : "(no email)"} <br>
+                ${u.mobile != undefined ? escapeHtml(u.mobile) : "(no mobile)"}
                 </td>
                 <td>${escapeHtml(u.name)}</td>
                 <td>${escapeHtml(u.status || '-')}</td>

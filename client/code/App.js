@@ -14,8 +14,6 @@ import LoginView from './view/LoginView.js';
 import NavView from './view/NavView.js';
 import HomeView from './view/HomeView.js';
 import EventsView from './view/EventsView.js';
-import MissionsView from './view/MissionsView.js';
-import FeedView from './view/FeedView.js';
 import MessagesView from './view/MessagesView.js';
 import ResourcesView from './view/ResourcesView.js';
 import CohortsView from './view/CohortsView.js';
@@ -55,8 +53,6 @@ export default class App {
     this.pages = {
       home: new HomeView(this.pageEl, this),
       events: new EventsView(this.pageEl, this),
-      missions: new MissionsView(this.pageEl, this),
-      feed: new FeedView(this.pageEl, this),
       messages: new MessagesView(this.pageEl, this),
       resources: new ResourcesView(this.pageEl, this),
       cohorts: new CohortsView(this.pageEl, this),

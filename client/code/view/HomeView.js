@@ -20,11 +20,6 @@ export default class HomeView {
       </div>
 
       <div class="card">
-        <h3>Active Missions</h3>
-        <p>0 mission(s) available.</p>
-      </div>
-
-      <div class="card">
         <h3>My Cohorts</h3>
         ${cohorts.length ? cohorts.map(cohort => `<p>${escapeHtml(cohort.name)}</p>`).join('') : '<p>No cohorts.</p>'}
       </div>

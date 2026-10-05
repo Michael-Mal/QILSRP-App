@@ -1,8 +1,6 @@
 const PAGES = [
   { key: 'home', label: 'Home' },
   { key: 'events', label: 'Events' },
-  { key: 'missions', label: 'Missions' },
-  { key: 'feed', label: 'Feed' },
   { key: 'messages', label: 'Messages' },
   { key: 'resources', label: 'Resources' },
   { key: 'settings', label: 'Settings' },
@@ -25,7 +23,7 @@ export default class NavView {
 
     this.container.innerHTML = pages
       .map(page => `<button id="nav-${page.key}" data-nav="${page.key}">${page.label}</button>`)
-      .join('');
+      .join(' ');
 
     this.container.addEventListener('click', event => {
       const button = event.target.closest('[data-nav]');
