@@ -49,24 +49,23 @@ export default class EventsView {
           <tbody>
             ${events.map(event => `
               <tr data-id="${escapeHtml(event.event_id)}">
-              <td>${escapeHtml(event.user)}</td>
-              <td>${escapeHtml(event.name)}</td>
-              <td>${escapeHtml(event.datetime)}</td>
-              <td>${escapeHtml(event.location)}</td>
-              <td>${escapeHtml(event.description)}</td>
-              <td>${event.confirmed ? "✅" : "❌"}</td>
-              <td style="width: 97px">
-                ${event.user_id == user.user_id ? `<button data-action="edit-event" data-id="${escapeHtml(event.event_id)}">✎ Edit</button>` : ""}
-                ${event.user_id == user.user_id ? `<button data-action="delete-event" data-id="${escapeHtml(event.event_id)}">🗑 Delete</button>` : ""}
-                ${!event.confirmed ? `<button data-action="confirm" data-id="${escapeHtml(event.event_id)}">✓ Confirm</button>` : ""}
-                <button data-action="member" data-id="${escapeHtml(event.event_id)}">☺︎ Members</button>
-              </td>
-              </tr>
-            `).join('')}
-           </tbody>
-        </table>
-      </div>
-    `;
+                <td>${escapeHtml(event.user)}</td>
+                <td>${escapeHtml(event.name)}</td>
+                <td>${escapeHtml(event.datetime)}</td>
+                <td>${escapeHtml(event.location)}</td>
+                <td>${escapeHtml(event.description)}</td>
+                <td>${event.confirmed ? "✅" : "❌"}</td>
+                <td style="width: 97px">
+                  ${event.user_id == user.user_id ? `<button data-action="edit-event" data-id="${escapeHtml(event.event_id)}">✎ Edit</button>` : ""}
+                  ${event.user_id == user.user_id ? `<button data-action="delete-event" data-id="${escapeHtml(event.event_id)}">🗑 Delete</button>` : ""}
+                  ${!event.confirmed ? `<button data-action="confirm" data-id="${escapeHtml(event.event_id)}">✓ Confirm</button>` : ""}
+                  <button data-action="member" data-id="${escapeHtml(event.event_id)}">☺︎ Members</button>
+                </td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
 
       this.container.innerHTML = html;
 

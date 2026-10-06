@@ -8,7 +8,22 @@ export default class HomeView {
 
   async mount() {
     const user = this.app.auth.currentUser;
-    const cohorts = await this.app.cohort.listForUser(user);
+    const [events, cohorts] = await Promise.all([
+      this.app.event.list(null, null),
+      this.app.cohort.listForUser(user)
+    ]);
+
+    // Find the earliest event but still in the future
+    const currentTimestamp = Date.now()
+    let smallestTimestamp = Number.MAX_SAFE_INTEGER
+    let earliestEvent = null
+    events.forEach(e => {
+      let eventTimestamp = Date.parse(e.datetime)
+      if (eventTimestamp > currentTimestamp && eventTimestamp < smallestTimestamp && e.confirmed ) {
+        smallestTimestamp = eventTimestamp
+        earliestEvent = e
+      }
+    });
 
     this.container.innerHTML = `
       <h2>Home</h2>
@@ -16,7 +31,7 @@ export default class HomeView {
 
       <div class="card">
         <h3>Next Event</h3>
-        <p>No upcoming events.</p>
+        <p>${earliestEvent ? `${earliestEvent.name} (${earliestEvent.datetime}) at ${earliestEvent.location}` : "No planned events"}</p>
       </div>
 
       <div class="card">
