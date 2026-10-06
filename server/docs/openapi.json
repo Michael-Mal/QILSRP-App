@@ -3042,7 +3042,7 @@
         ],
         "responses": {
           "200": {
-            "description": "An array of the users' id, name, email, role, and invitation status",
+            "description": "An array of the users' id, name, email, mobile, role, and invitation status",
             "content": {
               "application/json": {
                 "schema": {
@@ -3066,6 +3066,12 @@
                         "type": "string",
                         "examples": [
                           "ranger0@email.com"
+                        ]
+                      },
+                      "mobile": {
+                        "type": "string",
+                        "examples": [
+                          "0400000000"
                         ]
                       },
                       "role": {

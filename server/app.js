@@ -47,9 +47,16 @@ app.use('/folder', folderRouter)
 app.use('/event', eventRouter)
 
 // Error handling
-app.use(function(err, req, res, next){
-  res.status(err.status || 500).json({ error: true, message: err.message })
+app.use(function (err, req, res, next) {
+  if (err.status == 500 || !err.status) {
+    console.log("SERVER ERROR: " + err.message)
+    res.status(500).json({ error: true, message: "A server error has occured" })
 
+  }
+  else {
+    res.status(err.status || 500).json({ error: true, message: err.message })
+
+  }
 });
 
 app.use((req, res, next) => {

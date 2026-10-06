@@ -247,7 +247,7 @@ router.post('/:id/members', auth, verifyAdmin, verifyEventMemberData, (req, res,
  */
 router.get('/:id/members', auth, (req, res, next) => {
   let eventConfirmation = []
-  const user_fields = ["user_id", "name", "email", "role"]
+  const user_fields = ["user_id", "name", "email", "mobile", "role"]
 
   // Check that this user created/was invited to this event
   req.db("event_member")

@@ -1,6 +1,6 @@
 import { escapeHtml } from '../util/dom.js';
 
-export default class AdminView {
+export default class UserView {
   constructor(container, app) {
     this.container = container;
     this.app = app;
@@ -23,19 +23,26 @@ export default class AdminView {
       this.app.users.list(this.nameFilter, this.emailFilter, this.mobileFilter, this.statusFilter, this.cohortFilter, this.roleFilter),
       this.app.cohort.list(),
     ]);
+    const roles = ['student', 'ranger', 'admin']
 
     this.container.innerHTML = `
-      <h2>Admin Panel</h2>
+      <h2>User Management</h2>
 
       <div class="card">
-        <h3>Register Ranger</h3>
+        <h3>Register User</h3>
         <label>Name</label><input type="text" id="admin-reg-name" />
         <label>Email</label><input type="text" id="admin-reg-email" />
         <label>Mobile</label><input type="text" id="admin-reg-mobile" /> 
         <label>Password</label><input type="password" id="admin-reg-password" />
-        <label>Cohort</label><input type="text" id="admin-reg-cohort" />
-        <label>Role</label><input type="text" id="admin-reg-role" />
-        <button data-action="register-user">Create</button>
+        <label>Cohort</label>
+        ${cohorts.map(c => `
+          <input type="radio" id="${escapeHtml(c.name)}" name="admin-reg-cohort" value="${escapeHtml(c.name)}" /><label for="${escapeHtml(c.name)}" style="display:inline;">${escapeHtml(c.name)}</label><br>
+        `).join('')}
+        <label style="margin-top: 10px;">Role</label>
+        ${roles.map(r => `
+          <input type="radio" id="${escapeHtml(r)}" name="admin-reg-role" value="${escapeHtml(r)}" /><label for="${escapeHtml(r)}" style="display:inline;">${escapeHtml(String(r).charAt(0).toUpperCase() + String(r).slice(1))}</label><br>
+        `).join('')}
+        <button data-action="register-user" style="margin-top: 10px;">Create</button>
         <p id="admin-reg-error" class="error-text"></p>
       </div>
 
@@ -50,9 +57,15 @@ export default class AdminView {
           <label>Email</label><input type="text" id="admin-fil-email" />
           <label>Mobile</label><input type="text" id="admin-fil-mobile" />
           <label>Status</label><input type="text" id="admin-fil-status" />
-          <label>Cohort</label><input type="text" id="admin-fil-cohort" />
-          <label>Role</label><input type="text" id="admin-fil-role" />
-          <button data-action="filter">Filter</button>
+          <label>Cohort</label>
+          ${cohorts.map(c => `
+            <input type="radio" id="${escapeHtml(c.name)}-fil" name="admin-fil-cohort" value="${escapeHtml(c.name)}" /><label for="${escapeHtml(c.name)}-fil" style="display:inline;">${escapeHtml(c.name)}</label><br>
+          `).join('')}
+          <label style="margin-top: 10px;">Role</label>
+          ${roles.map(r => `
+            <input type="radio" id="${escapeHtml(r)}-fil" name="admin-fil-role" value="${escapeHtml(r)}" /><label for="${escapeHtml(r)}-fil" style="display:inline;">${escapeHtml(String(r).charAt(0).toUpperCase() + String(r).slice(1))}</label><br>
+          `).join('')}
+          <button data-action="filter" style="margin-top: 10px;">Filter</button>
         </div>
         <table>
           <thead><tr><th>Contact</th><th>Name</th><th>Role</th><th>Created</th><th>Status</th><th>Action</th></tr></thead>
@@ -77,16 +90,6 @@ export default class AdminView {
                 </td>
               </tr>
             `).join('')}
-          </tbody>
-        </table>
-      </div>
-
-      <div class="card">
-        <h3>Cohorts</h3>
-        <table>
-          <thead><tr><th>Name</th><th>Members</th></tr></thead>
-          <tbody>
-            ${cohorts.map(c => `<tr><td>${escapeHtml(c.name)}</td><td>${c.userCount}</td></tr>`).join('')}
           </tbody>
         </table>
       </div>
@@ -149,8 +152,16 @@ export default class AdminView {
     this.emailFilter = this.container.querySelector('#admin-fil-email').value.trim();
     this.mobileFilter = this.container.querySelector('#admin-fil-mobile').value.trim();
     this.statusFilter = this.container.querySelector('#admin-fil-status').value.trim();
-    this.cohortFilter = this.container.querySelector('#admin-fil-cohort').value.trim();
-    this.roleFilter = this.container.querySelector('#admin-fil-role').value.trim();
+    try {
+      this.cohortFilter = this.container.querySelector('input[name="admin-fil-cohort"]:checked').value;
+    } catch (e) {
+      this.cohortFilter = undefined
+    }
+    try {
+      this.roleFilter = document.querySelector('input[name="admin-fil-role"]:checked').value;
+    } catch (e) {
+      this.roleFilter = undefined
+    }
     await this.mount();
 
   }
@@ -158,10 +169,20 @@ export default class AdminView {
   async registerUser() {
     const name = this.container.querySelector('#admin-reg-name').value.trim();
     const email = this.container.querySelector('#admin-reg-email').value.trim();
-    const mobile = this.container.querySelector('#admin-reg-mobile').value.trim(); // mobile field WIP
+    const mobile = this.container.querySelector('#admin-reg-mobile').value.trim();
     const password = this.container.querySelector('#admin-reg-password').value.trim();
-    const cohort = this.container.querySelector('#admin-reg-cohort').value.trim();
-    const role = this.container.querySelector('#admin-reg-role').value.trim();
+    let cohort
+    try {
+      cohort = this.container.querySelector('input[name="admin-reg-cohort"]:checked').value;
+    } catch (e) {
+      cohort = undefined
+    }
+    let role
+    try {
+      role = document.querySelector('input[name="admin-reg-role"]:checked').value;
+    } catch (e) {
+      role = undefined
+    }
     const errorEl = this.container.querySelector('#admin-reg-error');
     errorEl.style.display = 'none';
 

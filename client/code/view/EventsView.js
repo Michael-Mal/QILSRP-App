@@ -113,10 +113,10 @@ export default class EventsView {
             <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Confirmed</th></tr></thead>
             <tbody>
               ${members.map(m => `
-                  <td>${escapeHtml(m.email)}</td>
+                  <td>${m.email ? m.email : m.mobile}</td>
                   <td>${escapeHtml(m.name)}</td>
                   <td>${escapeHtml(m.role)}</td>
-                  <td>${escapeHtml(m.confirmed)}</td>
+                  <td>${m.confirmed ? "✅" : "❌"}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -127,15 +127,25 @@ export default class EventsView {
       if (user.isAdmin)
         this.container.innerHTML += `
           <div class="card">
-            <h3>Manage Invitees</h3>
-            <label>Name</label><input type="text" id="fil-name" />
-            <label>Email</label><input type="text" id="fil-email" />
-            <label>Cohort</label><input type="text" id="fil-cohort" />
-            <label>Role</label><input type="text" id="fil-role" />
-            <button data-action="filter">Filter</button>
+            <div class="flexbox">
+              <h3>Manage Invitees</h3>
+              <button data-action="show-filters" class="right-align">⌕ Filter</button>
+              <button data-action="reset-filters" class="horizontal-gap">Reset Filter</button>
+            </div>
+            <div id="filters" style="display:none;">
+              <label>Name</label><input type="text" id="fil-name" />
+              <label>Email</label><input type="text" id="fil-email" />
+              <label>Cohort</label><input type="text" id="fil-cohort" />
+              <label>Role</label><input type="text" id="fil-role" />
+              <button data-action="filter">Filter</button>
+            </div>
             <h4>Invite New Users</h4>
             ${users.map(u => `
-              ${!member_ids.includes(u.user_id) ? `<input type="checkbox" id="${escapeHtml(u.user_id)}" name="invitees" value="${escapeHtml(u.user_id)}"><label for="${escapeHtml(u.user_id)}" style="display:inline;">${escapeHtml(u.name)} (${escapeHtml(u.role || '-')}) - ${escapeHtml(u.email)}</label><br>` : ""}
+              ${!member_ids.includes(u.user_id) ? `
+                <input type="checkbox" id="${escapeHtml(u.user_id)}" name="invitees" value="${escapeHtml(u.user_id)}">
+                <label for="${escapeHtml(u.user_id)}" style="display:inline;">
+                  ${escapeHtml(u.name)} (${escapeHtml(u.role || '-')}) - ${u.email ? u.email : u.mobile}
+                </label><br>` : ""}
             `).join('')}
             <br>
             <button data-action="invite-users">Invite</button>
@@ -147,8 +157,14 @@ export default class EventsView {
             <button data-action="delete-users">Remove</button>
           </div>
         `;
-      
+
       this.container.innerHTML += `<button data-action="back">Back</button>`
+
+      const showFiltersBtn = this.container.querySelector('[data-action="show-filters"]');
+      if (showFiltersBtn) showFiltersBtn.addEventListener('click', () => this.showFilters());
+
+      const resetFiltersBtn = this.container.querySelector('[data-action="reset-filters"]');
+      if (resetFiltersBtn) resetFiltersBtn.addEventListener('click', () => this.resetFilters());
 
       const filterBtn = this.container.querySelector('[data-action="filter"]');
       if (filterBtn) filterBtn.addEventListener('click', () => this.filterUsers());
@@ -229,6 +245,27 @@ export default class EventsView {
     this.event_id = id
     await this.mount()
     window.scrollTo(0, 0)
+  }
+
+  async showFilters() {
+    const filters = this.container.querySelector('#filters');
+    if (filters.style.display === 'none') {
+      filters.style.display = 'block';
+
+    }
+    else {
+      filters.style.display = 'none';
+
+    }
+  }
+
+  async resetFilters() {
+    this.nameFilter = null
+    this.emailFilter = null
+    this.cohortFilter = null
+    this.roleFilter = null
+    await this.mount();
+
   }
 
   async filterUsers() {

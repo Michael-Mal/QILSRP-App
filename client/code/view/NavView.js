@@ -1,9 +1,9 @@
 const PAGES = [
-  { key: 'home', label: 'Home' },
-  { key: 'events', label: 'Events' },
-  { key: 'messages', label: 'Messages' },
-  { key: 'resources', label: 'Resources' },
-  { key: 'settings', label: 'Settings' },
+  { key: 'home', label: '🏠 Home' },
+  { key: 'events', label: '📅 Events' },
+  { key: 'messages', label: '💬 Messages' },
+  { key: 'resources', label: '🗃️ Resources' },
+  { key: 'settings', label: '⚙️ Settings' },
 ];
 
 export default class NavView {
@@ -17,8 +17,8 @@ export default class NavView {
     const pages = [...PAGES];
 
     if (user.isAdmin) {
-      pages.push({ key: 'cohorts', label: 'Cohorts' });
-      pages.push({ key: 'admin', label: 'Admin' })
+      pages.push({ key: 'cohorts', label: '👥 Cohorts' });
+      pages.push({ key: 'user', label: '👤 Users' })
     };
 
     this.container.innerHTML = pages

@@ -17,7 +17,7 @@ import EventsView from './view/EventsView.js';
 import MessagesView from './view/MessagesView.js';
 import ResourcesView from './view/ResourcesView.js';
 import CohortsView from './view/CohortsView.js';
-import AdminView from './view/AdminView.js';
+import UserView from './view/UserView.js';
 import SettingsView from './view/SettingsView.js';
 
 const API_URL = 'http://localhost:3000';
@@ -56,7 +56,7 @@ export default class App {
       messages: new MessagesView(this.pageEl, this),
       resources: new ResourcesView(this.pageEl, this),
       cohorts: new CohortsView(this.pageEl, this),
-      admin: new AdminView(this.pageEl, this),
+      user: new UserView(this.pageEl, this),
       settings: new SettingsView(this.pageEl, this),
     };
   }
