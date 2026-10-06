@@ -194,8 +194,8 @@ export default class ResourcesView {
         html_dynamic += `
         <div class="card">
           <button data-action="goto-folder" data-id="${folder.id}">📁: ${escapeHtml(folder.name)}</button> &emsp;
-          <button data-action="edit-folder" data-id="${folder.id}">Edit</button>
-          <button data-action="delete-folder" data-id="${folder.id}">Delete</button>
+          <button data-action="edit-folder" data-id="${folder.id}">✎ Edit</button>
+          <button data-action="delete-folder" data-id="${folder.id}">🗑 Delete</button>
           <p>Access level: ${escapeHtml(folder.accessLevel)} &ensp; | &ensp; Cohorts: ${escapeHtml(folder.cohorts)} </p>
         </div>
       `;
@@ -207,10 +207,10 @@ export default class ResourcesView {
           <h3>${escapeHtml(resource.title)}</h3>
           <p>${escapeHtml(resource.type)}</p>
           <p>Access level: ${escapeHtml(resource.accessLevel)} &ensp; | &ensp; Cohorts: ${escapeHtml(resource.cohorts)}</p>
-          <button data-action="download-resource" data-id="${resource.id}">Download</button> | 
-          <button data-action="edit-resource" data-id="${resource.id}" data-uploader="${resource.uploaderID}">Edit</button> | 
-          <button data-action="delete-resource" data-id="${resource.id}" data-uploader="${resource.uploaderID}">Delete</button> &ensp; | &ensp;
-          <button data-action="share-resource" data-id="${resource.id}" data-title="${resource.title}">Copy link</button></p>
+          <button data-action="download-resource" data-id="${resource.id}">🡓 Download</button> | 
+          <button data-action="edit-resource" data-id="${resource.id}" data-uploader="${resource.uploaderID}">✎ Edit</button> | 
+          <button data-action="delete-resource" data-id="${resource.id}" data-uploader="${resource.uploaderID}">🗑 Delete</button> &ensp; | &ensp;
+          <button data-action="share-resource" data-id="${resource.id}" data-title="${resource.title}">🗐 Copy link</button></p>
         </div>
       `;
     })

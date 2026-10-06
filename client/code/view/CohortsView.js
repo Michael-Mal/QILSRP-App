@@ -34,7 +34,7 @@ export default class CohortsView {
               <td>${escapeHtml(cohort.name)}</td>
               <td>${escapeHtml(cohort.userCount)}</td>
                 <td>
-                  <button data-action="delete-cohort" data-id="${escapeHtml(cohort.name)}">Delete</button>
+                  <button data-action="delete-cohort" data-id="${escapeHtml(cohort.name)}">🗑 Delete</button>
                 </td>
               </tr>
             `).join('')}

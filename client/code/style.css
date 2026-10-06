@@ -135,6 +135,17 @@ th {
   margin-bottom: 0;
 }
 
+/* Flexbox configuration for horizontal alignment */
+.flexbox {
+  display: flex;
+}
+.right-align {
+  margin-left: auto;
+}
+.horizontal-gap {
+  margin-left: 5px;
+}
+
 #login-screen {
   max-width: 300px;
   margin: 60px auto;

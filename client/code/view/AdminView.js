@@ -31,10 +31,7 @@ export default class AdminView {
         <h3>Register Ranger</h3>
         <label>Name</label><input type="text" id="admin-reg-name" />
         <label>Email</label><input type="text" id="admin-reg-email" />
-
-        <!-- Mobile field WIP -->
         <label>Mobile</label><input type="text" id="admin-reg-mobile" /> 
-
         <label>Password</label><input type="password" id="admin-reg-password" />
         <label>Cohort</label><input type="text" id="admin-reg-cohort" />
         <label>Role</label><input type="text" id="admin-reg-role" />
@@ -43,30 +40,40 @@ export default class AdminView {
       </div>
 
       <div class="card">
-        <h3>Users</h3>
-        <label>Name</label><input type="text" id="admin-fil-name" />
-        <label>Email</label><input type="text" id="admin-fil-email" />
-        <label>Mobile</label><input type="text" id="admin-fil-mobile" />
-        <label>Status</label><input type="text" id="admin-fil-status" />
-        <label>Cohort</label><input type="text" id="admin-fil-cohort" />
-        <label>Role</label><input type="text" id="admin-fil-role" />
-        <button data-action="filter">Filter</button>
+        <div class="flexbox">
+          <h3>Users</h3>
+          <button data-action="show-filters" class="right-align">⌕ Filter</button>
+          <button data-action="reset-filters" class="horizontal-gap">Reset Filter</button>
+        </div>
+        <div id="filters" style="display:none;">
+          <label>Name</label><input type="text" id="admin-fil-name" />
+          <label>Email</label><input type="text" id="admin-fil-email" />
+          <label>Mobile</label><input type="text" id="admin-fil-mobile" />
+          <label>Status</label><input type="text" id="admin-fil-status" />
+          <label>Cohort</label><input type="text" id="admin-fil-cohort" />
+          <label>Role</label><input type="text" id="admin-fil-role" />
+          <button data-action="filter">Filter</button>
+        </div>
         <table>
-          <thead><tr><th>Contact</th><th>Name</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
+          <thead><tr><th>Contact</th><th>Name</th><th>Role</th><th>Created</th><th>Status</th><th>Action</th></tr></thead>
           <tbody>
             ${users.map(u => `
               <tr data-id="${escapeHtml(u.user_id)}">
                 <td>
-                ${u.email != undefined ? escapeHtml(u.email) : "(no email)"} <br>
-                ${u.mobile != undefined ? escapeHtml(u.mobile) : "(no mobile)"}
+                  <br>
+                  ${u.email != undefined ? escapeHtml(u.email) : "(no email)"} 
+                  <br><br>
+                  ${u.mobile != undefined ? `${escapeHtml(u.mobile.slice(0, 4) + " " + u.mobile.slice(4, 7) + " " + u.mobile.slice(7, 10))}` : "(no mobile)"}
+                  <br><br>
                 </td>
                 <td>${escapeHtml(u.name)}</td>
-                <td>${escapeHtml(u.status || '-')}</td>
-                <td>${escapeHtml(u.created || '-')}</td>
-                <td>
-                  <button data-action="edit-user" data-id="${escapeHtml(u.user_id)}">Edit</button>
-                  <button data-action="delete-user" data-id="${escapeHtml(u.user_id)}">Delete</button>
-                  ${u.status == "Pending" ? `<button data-action="verify-user" data-id="${escapeHtml(u.user_id)}">Verify</button>` : ""}
+                <td>${escapeHtml(u.role)}</td>
+                <td style="width: 60px">${escapeHtml(u.created || '-')}</td>
+                <td>${escapeHtml(u.status)}</td>
+                <td style="width: 145px">
+                  <button data-action="edit-user" data-id="${escapeHtml(u.user_id)}">✎ Edit</button>
+                  <button data-action="delete-user" data-id="${escapeHtml(u.user_id)}" style="margin-top: 5px">🗑 Delete</button>
+                  ${u.status == "Pending" ? `<button data-action="verify-user" data-id="${escapeHtml(u.user_id)}" style="margin-top: 5px">✓ Verify</button>` : ""}
                 </td>
               </tr>
             `).join('')}
@@ -90,11 +97,17 @@ export default class AdminView {
       </div>
     `;
 
-    const registerBtn = this.container.querySelector('[data-action="register-user"]');
-    if (registerBtn) registerBtn.addEventListener('click', () => this.registerUser());
+    const showFiltersBtn = this.container.querySelector('[data-action="show-filters"]');
+    if (showFiltersBtn) showFiltersBtn.addEventListener('click', () => this.showFilters());
+
+    const resetFiltersBtn = this.container.querySelector('[data-action="reset-filters"]');
+    if (resetFiltersBtn) resetFiltersBtn.addEventListener('click', () => this.resetFilters());
 
     const filterBtn = this.container.querySelector('[data-action="filter"]');
     if (filterBtn) filterBtn.addEventListener('click', () => this.filterUsers());
+
+    const registerBtn = this.container.querySelector('[data-action="register-user"]');
+    if (registerBtn) registerBtn.addEventListener('click', () => this.registerUser());
 
     this.container.querySelectorAll('[data-action="edit-user"]').forEach(button => {
       button.addEventListener('click', () => this.editUser(button.dataset.id));
@@ -107,6 +120,39 @@ export default class AdminView {
     this.container.querySelectorAll('[data-action="verify-user"]').forEach(button => {
       button.addEventListener('click', () => this.verifyUser(button.dataset.id));
     });
+  }
+
+  async showFilters() {
+    const filters = this.container.querySelector('#filters');
+    if (filters.style.display === 'none') {
+      filters.style.display = 'block';
+
+    }
+    else {
+      filters.style.display = 'none';
+
+    }
+  }
+
+  async resetFilters() {
+    this.nameFilter = null
+    this.emailFilter = null
+    this.statusFilter = null
+    this.cohortFilter = null
+    this.roleFilter = null
+    await this.mount();
+
+  }
+
+  async filterUsers() {
+    this.nameFilter = this.container.querySelector('#admin-fil-name').value.trim();
+    this.emailFilter = this.container.querySelector('#admin-fil-email').value.trim();
+    this.mobileFilter = this.container.querySelector('#admin-fil-mobile').value.trim();
+    this.statusFilter = this.container.querySelector('#admin-fil-status').value.trim();
+    this.cohortFilter = this.container.querySelector('#admin-fil-cohort').value.trim();
+    this.roleFilter = this.container.querySelector('#admin-fil-role').value.trim();
+    await this.mount();
+
   }
 
   async registerUser() {
@@ -129,16 +175,6 @@ export default class AdminView {
       errorEl.textContent = error.message || 'Registration failed.';
       errorEl.style.display = 'block';
     }
-  }
-
-  async filterUsers() {
-    this.nameFilter = this.container.querySelector('#admin-fil-name').value.trim();
-    this.emailFilter = this.container.querySelector('#admin-fil-email').value.trim();
-    this.mobileFilter = this.container.querySelector('#admin-fil-mobile').value.trim();
-    this.statusFilter = this.container.querySelector('#admin-fil-status').value.trim();
-    this.cohortFilter = this.container.querySelector('#admin-fil-cohort').value.trim();
-    this.roleFilter = this.container.querySelector('#admin-fil-role').value.trim();
-    await this.mount();
   }
 
   async editUser(id) {

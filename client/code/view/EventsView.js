@@ -45,7 +45,7 @@ export default class EventsView {
         <label>Month</label><input type="number" id="filter-month" />
         <button data-action="filter">Filter</button>
         <table>
-          <thead><tr><th>Creator</th><th>Name</th><th>Date</th><th>Location</th><th>Description</th><th>Confirmed</th><th>Action</th></tr></thead>
+          <thead><tr><th>Creator</th><th>Name</th><th>Date</th><th>Location</th><th>Description</th><th>Conf.</th><th>Action</th></tr></thead>
           <tbody>
             ${events.map(event => `
               <tr data-id="${escapeHtml(event.event_id)}">
@@ -54,13 +54,13 @@ export default class EventsView {
               <td>${escapeHtml(event.datetime)}</td>
               <td>${escapeHtml(event.location)}</td>
               <td>${escapeHtml(event.description)}</td>
-              <td>${escapeHtml(event.confirmed)}</td>
-                <td>
-                  ${event.user_id == user.user_id ? `<button data-action="edit-event" data-id="${escapeHtml(event.event_id)}">Edit</button>` : ""}
-                  ${event.user_id == user.user_id ? `<button data-action="delete-event" data-id="${escapeHtml(event.event_id)}">Delete</button>` : ""}
-                  ${!event.confirmed ? `<button data-action="confirm" data-id="${escapeHtml(event.event_id)}">Confirm</button>` : ""}
-                  <button data-action="member" data-id="${escapeHtml(event.event_id)}">Members</button>
-                </td>
+              <td>${event.confirmed ? "✅" : "❌"}</td>
+              <td style="width: 97px">
+                ${event.user_id == user.user_id ? `<button data-action="edit-event" data-id="${escapeHtml(event.event_id)}">✎ Edit</button>` : ""}
+                ${event.user_id == user.user_id ? `<button data-action="delete-event" data-id="${escapeHtml(event.event_id)}">🗑 Delete</button>` : ""}
+                ${!event.confirmed ? `<button data-action="confirm" data-id="${escapeHtml(event.event_id)}">✓ Confirm</button>` : ""}
+                <button data-action="member" data-id="${escapeHtml(event.event_id)}">☺︎ Members</button>
+              </td>
               </tr>
             `).join('')}
            </tbody>
