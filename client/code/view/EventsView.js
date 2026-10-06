@@ -41,9 +41,10 @@ export default class EventsView {
       html += `
       <div class="card">
         <h3>Events</h3>
-        <label>Year</label><input type="number" id="filter-year" />
-        <label>Month</label><input type="number" id="filter-month" />
-        <button data-action="filter">Filter</button>
+        <label>Year</label><input type="number" id="fil-year" />
+        <label>Month (01-12)</label><input type="number" id="fil-month" /><br>
+        <button data-action="filter" style="margin-top: 10px;">⌕ Filter</button>
+        <button data-action="reset-filters" class="horizontal-gap">Reset Filter</button>
         <table>
           <thead><tr><th>Creator</th><th>Name</th><th>Date</th><th>Location</th><th>Description</th><th>Conf.</th><th>Action</th></tr></thead>
           <tbody>
@@ -75,6 +76,9 @@ export default class EventsView {
       const filterBtn = this.container.querySelector('[data-action="filter"]');
       if (filterBtn) filterBtn.addEventListener('click', () => this.filterEvents());
 
+      const resetFiltersBtn = this.container.querySelector('[data-action="reset-filters"]');
+      if (resetFiltersBtn) resetFiltersBtn.addEventListener('click', () => this.resetFilters());
+
       this.container.querySelectorAll('[data-action="edit-event"]').forEach(button => {
         button.addEventListener('click', () => this.editEvent(button.dataset.id));
       });
@@ -94,7 +98,11 @@ export default class EventsView {
     }
     else {
       // Member management
-      const members = await this.app.event.members(this.event_id)
+      const [members, cohorts] = await Promise.all([
+        this.app.event.members(this.event_id),
+        this.app.cohort.list(),
+      ]);
+      const roles = ['student', 'ranger', 'admin']
       let member_ids = []
       members.forEach(m => {
         member_ids.push(m.user_id)
@@ -134,9 +142,15 @@ export default class EventsView {
             <div id="filters" style="display:none;">
               <label>Name</label><input type="text" id="fil-name" />
               <label>Email</label><input type="text" id="fil-email" />
-              <label>Cohort</label><input type="text" id="fil-cohort" />
-              <label>Role</label><input type="text" id="fil-role" />
-              <button data-action="filter">Filter</button>
+              <label>Cohort</label>
+              ${cohorts.map(c => `
+                <input type="radio" id="${escapeHtml(c.name)}" name="fil-cohort" value="${escapeHtml(c.name)}" /><label for="${escapeHtml(c.name)}" style="display:inline;">${escapeHtml(c.name)}</label><br>
+              `).join('')}
+              <label style="margin-top: 10px;">Role</label>
+              ${roles.map(r => `
+                <input type="radio" id="${escapeHtml(r)}" name="fil-role" value="${escapeHtml(r)}" /><label for="${escapeHtml(r)}" style="display:inline;">${escapeHtml(String(r).charAt(0).toUpperCase() + String(r).slice(1))}</label><br>
+                `).join('')}
+              <button data-action="filter" style="margin-top: 10px;">Filter</button>
             </div>
             <h4>Invite New Users</h4>
             ${users.map(u => `
@@ -163,7 +177,7 @@ export default class EventsView {
       if (showFiltersBtn) showFiltersBtn.addEventListener('click', () => this.showFilters());
 
       const resetFiltersBtn = this.container.querySelector('[data-action="reset-filters"]');
-      if (resetFiltersBtn) resetFiltersBtn.addEventListener('click', () => this.resetFilters());
+      if (resetFiltersBtn) resetFiltersBtn.addEventListener('click', () => this.resetUserFilters());
 
       const filterBtn = this.container.querySelector('[data-action="filter"]');
       if (filterBtn) filterBtn.addEventListener('click', () => this.filterUsers());
@@ -200,9 +214,16 @@ export default class EventsView {
   }
 
   async filterEvents() {
-    this.yearFilter = this.container.querySelector('#filter-year').value.trim();
-    this.monthFilter = this.container.querySelector('#filter-month').value.trim();
+    this.yearFilter = this.container.querySelector('#fil-year').value.trim();
+    this.monthFilter = this.container.querySelector('#fil-month').value.trim();
     await this.mount();
+  }
+
+  async resetFilters() {
+    this.yearFilter = null
+    this.monthFilter = null
+    await this.mount();
+
   }
 
   async editEvent(event_id) {
@@ -258,7 +279,7 @@ export default class EventsView {
     }
   }
 
-  async resetFilters() {
+  async resetUserFilters() {
     this.nameFilter = null
     this.emailFilter = null
     this.cohortFilter = null
@@ -270,8 +291,16 @@ export default class EventsView {
   async filterUsers() {
     this.nameFilter = this.container.querySelector('#fil-name').value.trim();
     this.emailFilter = this.container.querySelector('#fil-email').value.trim();
-    this.cohortFilter = this.container.querySelector('#fil-cohort').value.trim();
-    this.roleFilter = this.container.querySelector('#fil-role').value.trim();
+    try {
+      this.cohortFilter = this.container.querySelector('input[name="fil-cohort"]:checked').value;
+    } catch (e) {
+      this.cohortFilter = undefined
+    }
+    try {
+      this.roleFilter = document.querySelector('input[name="fil-role"]:checked').value;
+    } catch (e) {
+      this.roleFilter = undefined
+    }
     await this.mount();
   }
 
