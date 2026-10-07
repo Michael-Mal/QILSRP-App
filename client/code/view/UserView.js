@@ -21,7 +21,7 @@ export default class UserView {
 
     const [users, cohorts] = await Promise.all([
       this.app.users.list(this.nameFilter, this.emailFilter, this.mobileFilter, this.statusFilter, this.cohortFilter, this.roleFilter),
-      this.app.cohort.list(),
+      this.app.cohort.list(true),
     ]);
     const roles = ['student', 'ranger', 'admin']
 

@@ -1,5 +1,5 @@
 import express from 'express'
-import { auth } from '../middleware/authorisation.js'
+import { auth, optionalAuth } from '../middleware/authorisation.js'
 import { verifyAdmin } from '../middleware/authorisation.js'
 import { verifyCohortData } from '../middleware/data-verification.js'
 
@@ -33,7 +33,7 @@ router.post('/', auth, verifyAdmin, verifyCohortData, (req, res, next) => {
     .catch(e => next(e))
 })
 
-router.get('/', auth, (req, res, next) => {
+router.get('/', optionalAuth, (req, res, next) => {
   let cohorts
   req.db('cohort')
     .then(dbRes => {
@@ -57,19 +57,20 @@ router.get('/', auth, (req, res, next) => {
       })
 
       // Find the relevant cohort
-      cohorts.forEach(cohort => {
-        for (let i = 0; i < dbRes.length; i++) {
-          if (cohort.name == dbRes[i].name) {
-            cohort.userCount = dbRes[i].userCount
+      if (req.role == 'admin') {
+        cohorts.forEach(cohort => {
+          for (let i = 0; i < dbRes.length; i++) {
+            if (cohort.name == dbRes[i].name) {
+              cohort.userCount = dbRes[i].userCount
+              break
 
-            break
-
+            }
+            // No users have this cohort
+            cohort.userCount = 0
+            
           }
-          // No users have this cohort
-          cohort.userCount = 0
-        }
-      })
-
+        })
+      }
       res.json(cohorts)
 
     })

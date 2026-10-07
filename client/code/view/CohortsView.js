@@ -13,7 +13,7 @@ export default class CohortsView {
       return;
     }
 
-    const cohorts = await this.app.cohort.list()
+    const cohorts = await this.app.cohort.list(true)
 
     let html =
       `<h2>Cohorts</h2>

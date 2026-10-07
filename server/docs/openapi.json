@@ -1777,7 +1777,7 @@
         ],
         "responses": {
           "200": {
-            "description": "An array of cohort names and the number of users within each",
+            "description": "An array of cohort names and the number of users within each. Only includes a user count if the user is an admin.",
             "content": {
               "application/json": {
                 "schema": {

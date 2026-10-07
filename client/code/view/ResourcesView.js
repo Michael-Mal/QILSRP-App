@@ -276,7 +276,7 @@ export default class ResourcesView {
 
   // Populate a select field with recognised cohorts
   async populateCohorts(field) {
-    const allCohorts = await this.app.cohort.list();
+    const allCohorts = await this.app.cohort.list(true);
 
     allCohorts.forEach(cohort => {
       const cohortField = new Option(`${cohort.name} | users: ${cohort.userCount}`, cohort.name);
@@ -363,7 +363,7 @@ export default class ResourcesView {
       newAccessLevel = prompt("Invalid access level. Please enter a valid access level (student, ranger, admin) or leave blank to keep current level:").toLowerCase();
     }
 
-    const cohortsRaw = await this.app.cohort.list();
+    const cohortsRaw = await this.app.cohort.list(true);
     const cohorts = cohortsRaw.map(cohort => cohort.name);
 
     let newCohortsRaw = prompt("Enter the new cohorts for the folder, separate each cohort by a comma ',' and optionally a space.");
@@ -497,7 +497,7 @@ export default class ResourcesView {
       newAccessLevel = prompt("Invalid access level. Please enter a valid access level (student, ranger, admin) or leave blank to keep current level:").toLowerCase();
     }
 
-    const cohortsRaw = await this.app.cohort.list();
+    const cohortsRaw = await this.app.cohort.list(true);
     let cohorts = cohortsRaw.map(cohort => cohort.name);
     cohorts.push('');
 

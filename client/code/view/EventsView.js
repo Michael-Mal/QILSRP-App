@@ -100,7 +100,7 @@ export default class EventsView {
       // Member management
       const [members, cohorts] = await Promise.all([
         this.app.event.members(this.event_id),
-        this.app.cohort.list(),
+        this.app.cohort.list(true),
       ]);
       const roles = ['student', 'ranger', 'admin']
       let member_ids = []

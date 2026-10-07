@@ -7,6 +7,8 @@ export default class RegisterView {
   }
   async mount() {
 
+    const cohorts = await this.app.cohort.list(false)
+
     this.container.innerHTML = `
       <h2>Registration</h2>
 
@@ -16,8 +18,11 @@ export default class RegisterView {
         <label>Email</label><input type="text" id="reg-email" />
         <label>and/or Mobile</label><input type="text" id="reg-mobile" />
         <label>Password</label><input type="password" id="reg-password" />
-        <label>Cohort</label><input type="text" id="reg-cohort" />
-        <button data-action="register-user">Send</button>
+        <label>Cohort</label>
+        ${cohorts.map(c => `
+          <input type="radio" id="${escapeHtml(c.name)}" name="reg-cohort" value="${escapeHtml(c.name)}" /><label for="${escapeHtml(c.name)}" style="display:inline;">${escapeHtml(c.name)}</label><br>
+        `).join('')}
+        <button data-action="register-user" style="margin-top: 10px;">Send</button>
         <p id="reg-error" class="error-text"></p>
       </div>
     `;
@@ -31,7 +36,12 @@ export default class RegisterView {
     const email = this.container.querySelector('#reg-email').value.trim();
     const mobile = this.container.querySelector('#reg-mobile').value.trim();
     const password = this.container.querySelector('#reg-password').value.trim();
-    const cohort = this.container.querySelector('#reg-cohort').value.trim();
+    let cohort
+    try {
+      cohort = this.container.querySelector('input[name="reg-cohort"]:checked').value;
+    } catch (e) {
+      cohort = undefined
+    }
     const errorEl = this.container.querySelector('#reg-error');
     errorEl.style.display = 'none';
 

@@ -12,8 +12,8 @@ export default class UserController {
     return this.api.post('/cohort/', { name }, { auth: true });
   }
 
-  async list() {
-    const rows = await this.api.get('/cohort/', { auth: true });
+  async list(auth) {
+    const rows = await this.api.get('/cohort/', { auth });
     return rows.map(row => new Cohort(row));
   }
 
