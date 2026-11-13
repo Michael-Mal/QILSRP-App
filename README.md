@@ -11,14 +11,15 @@ Features include resource/multimedia sharing, event scheduling and notifications
 
 ## How to Run
 1. Install [MySQL Workbench](https://dev.mysql.com/downloads/workbench/) and [node.js](https://nodejs.org/en/download)
+2. Clone this repository to your machine
 ### Database Setup
-2. Create a new local database instance in MySQL Workbench
-3. Either run [this .sql dump file](https://github.com/Michael-Mal/QILSRP-App/blob/main/database/database.sql) or manually create your own database by using the schema outlined [here](https://github.com/Michael-Mal/QILSRP-App/blob/main/database/database_schema.pdf)
-4. Insert the connection details for the database into /server/knexfile.js
+3. Create a new local database instance in MySQL Workbench
+4. Either run [this .sql dump file](https://github.com/Michael-Mal/QILSRP-App/blob/main/database/database.sql) or manually create your own database by using the schema outlined [here](https://github.com/Michael-Mal/QILSRP-App/blob/main/database/database_schema.pdf)
+5. Insert the connection details for the database into /server/knexfile.js
 ### App Setup
-5. cd into /client and /server and run `npm i` in each to download dependencies
-6. Run the server by typing `...\server>npm start` and then run the client by entering `...\client>npm run dev`
-7. Enter the link in the console into your web browser, or if you want to look at the server docs, go to http://localhost:3000/
+6. cd into /client and /server and run `npm i` in each to download dependencies
+7. Run the server by typing `...\server>npm start` and then run the client by entering `...\client>npm run dev`
+8. Enter the link in the console into your web browser, or if you want to look at the server docs, go to http://localhost:3000/
 
 ## Screenshots
 ![Content Warning](https://github.com/Michael-Mal/QILSRP-App/blob/main/screenshots/Content%20Warning.jpg)
